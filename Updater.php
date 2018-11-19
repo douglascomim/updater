@@ -7,10 +7,13 @@
 class Updater {
 
 	//	Path execution
-	private $path = __DIR__;
+	private $path = '/home/douglas/Apps/updater-test'; // __DIR__
 	
 	//	Breakline chars
 	private $breakLine = "\n";
+
+	//	Prefix
+	private $pre = ">";
 
 	//	Version
 	private $version = '2.0';
@@ -89,6 +92,7 @@ class Updater {
 	 * 	Main method
 	 **/
 	public function start() {
+		$this->execute('clear');
 		$this->header();
 	}
 
@@ -96,15 +100,60 @@ class Updater {
 	 * 	Header
 	 **/
 	private function header() {
-		$this->print('Header');
+		
+		$this->print('', 100); 
+		$this->print('', 0);
+
+		$this->print('Updater Console');
+		$this->print('Version: ' . $this->version);
+
+		$this->print('', 0);
+		$this->pathCheck('teste');
+	}
+
+	/**	
+	 * 	Check path
+	 *	@param String $message
+	 **/
+	private function pathCheck($path, $info=true, $label=false, $die=true) {
+		
+		($info) ? $this->print("Verifing: $path", 2) : null;
+		if (!file_exists($path)) {
+			($info) ? $this->print(' - [ERROR] [Path not found]', 3, false) : null;
+			($label) ? $this->print($label) : null;
+			($die) ? $this->abort() : null;
+			return false;
+		}
+		($info) ? $this->print(' - [ OK ]') : null;
+		return true;
 	}
 
 	/**	
 	 * 	Print to screen
 	 *	@param String $message
 	 **/
-	private function print($message) {
+	private function print($message, $pre = 1, $brk = true) {
+		if ($brk) {
+			echo $this->breakLine;
+			echo str_repeat($this->pre, $pre) . ' ';
+		}
 		echo $message;
+	}
+
+	/**	
+	 * 	Execute commands
+	 *	@param String $command
+	 **/
+	private function execute($command) {
+		echo shell_exec("$command");
+	}
+
+	/**	
+	 * 	Abort
+	 **/
+	private function abort($message = 'Aborting update...') {
+		$this->print($message);
+		exit();
 	}	
 }
 
