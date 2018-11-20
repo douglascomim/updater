@@ -7,16 +7,23 @@
 class Updater {
 
 	//	Path execution
-	private $path = '/home/douglas/Apps/updater-test'; // __DIR__
+	private $path = '/home/douglas/Apps/updater-test/'; // __DIR__
 	
 	//	Breakline chars
 	private $breakLine = "\n";
 
 	//	Prefix
-	private $pre = ">";
+	private $pre = '>';
 
 	//	Version
 	private $version = '2.0';
+
+	//	Colors
+	private $colors = array(
+		'red' => "\033[1;31m",
+		'green' => "\033[1;32m",
+		'none' => "\033[0m",
+	);
 
 	//	Parameters
 	private $enviroments = array(
@@ -108,6 +115,10 @@ class Updater {
 		$this->print('Version: ' . $this->version);
 
 		$this->print('', 0);
+		$this->print('', 100); 
+
+		$this->print('', 0);
+		$this->pathCheck('weblaudos-master.zip');
 		$this->pathCheck('teste');
 	}
 
@@ -117,14 +128,16 @@ class Updater {
 	 **/
 	private function pathCheck($path, $info=true, $label=false, $die=true) {
 		
-		($info) ? $this->print("Verifing: $path", 2) : null;
-		if (!file_exists($path)) {
-			($info) ? $this->print(' - [ERROR] [Path not found]', 3, false) : null;
+		$pathFull = $this->path . $path;
+
+		($info) ? $this->print("Verifing path: '$pathFull' - ", 2) : null;
+		if (!file_exists($pathFull)) {
+			($info) ? $this->print('[ERROR] [Path not found]', 0, false, 'red') : null;
 			($label) ? $this->print($label) : null;
 			($die) ? $this->abort() : null;
 			return false;
 		}
-		($info) ? $this->print(' - [ OK ]') : null;
+		($info) ? $this->print('[OK]', 0, false, 'green') : null;
 		return true;
 	}
 
@@ -132,10 +145,13 @@ class Updater {
 	 * 	Print to screen
 	 *	@param String $message
 	 **/
-	private function print($message, $pre = 1, $brk = true) {
+	private function print($message, $pre = 1, $brk = true, $color = null) {
 		if ($brk) {
 			echo $this->breakLine;
 			echo str_repeat($this->pre, $pre) . ' ';
+		}
+		if ($color && isset($this->colors[$color])) {
+			$message = $this->colors[$color] . $message . $this->colors['none'];
 		}
 		echo $message;
 	}
@@ -151,8 +167,11 @@ class Updater {
 	/**	
 	 * 	Abort
 	 **/
-	private function abort($message = 'Aborting update...') {
-		$this->print($message);
+	private function abort($message = 'Execution aborted...') {
+		$this->print('', 0);
+		$this->print($message, 1, true, 'red');
+		$this->print('', 0);
+		$this->print('', 100); 
 		exit();
 	}	
 }
