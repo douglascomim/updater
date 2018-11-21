@@ -1,7 +1,7 @@
 <?php
 /**	
  * 	System updater manager
- *	@author Douglas Comim <douglas.comim@gmail.com>
+ *	@author Douglas Comim Pinheiro <douglas.comim@gmail.com>
  *	@version 2.0 | 19.11.2018
  **/ 
 class Updater {
@@ -13,7 +13,7 @@ class Updater {
 	private $breakLine = "\n";
 
 	//	Prefix
-	private $pre = '>';
+	private $pre = '-';
 
 	//	QPre
 	private $qpre = 1;
@@ -26,10 +26,32 @@ class Updater {
 
 	//	Colors
 	private $colors = array(
-		'red' => "\033[1;31m",
-		'green' => "\033[1;32m",
+		
+		//	Normal
+		'n' => "\033[0;30m", 				// black
+		'nr' => "\033[0;31m", 				// red
+		'ng' => "\033[0;32m",				// green
+		'nb' => "\033[0;34m",				// blue
+
+		//	underline
+		'u0' => "\033[4m", 					
+		'u' => "\033[4;30m", 				// black
+		'ur' => "\033[4;31m", 				// red
+		'ug' => "\033[4;32m",				// green
+		'ub' => "\033[4;34m",				// blue
+
+		//	Bold
+		'b0' => "\033[1m", 				
+		'b' => "\033[1;30m", 				// black
+		'br' => "\033[1;31m", 				// red
+		'bg' => "\033[1;32m",				// green
+		'bb' => "\033[1;34m",				// blue
+
 		'none' => "\033[0m",
 	);
+
+	//	Choices
+	private $choices = array();
 
 	//	Envs
 	private $envs = array();
@@ -38,7 +60,7 @@ class Updater {
 	private $environments = array(
 		'PRODUCTION' => array(
 			'user' => 'www-data',
-			'update' => 'deploy',						// Type of update: [deploy: use master.zip | site: copy source from site]
+			'type' => 'deploy',						// Type of update: [deploy: use master.zip | site: copy source from site]
 			'siteFolder' => 'producao',
 			'sourceFolder' => 'weblaudos-master',
 			'persistentFiles' => array(
@@ -115,6 +137,8 @@ class Updater {
 
 		$this->header();
 		$this->body();
+		
+		$this->log();
 	}
 
 	/**	
@@ -126,8 +150,8 @@ class Updater {
 		$this->print('', true , -1);
 		
 		$this->qpre = 1;
-		$this->print('Updater Console PHP');
-		$this->print('Version: ' . $this->version);
+		$this->print('Updater Console PHP from Git');
+		$this->print('Version: '. $this->version, true, 2);
 
 		$this->print('', true , -1);
 		$this->print('', true, 100);
@@ -144,36 +168,74 @@ class Updater {
 	private function body() {
 		$this->qpre = 2; 
 		
-		$this->print('Which environment do you want to upgrade ?', true, 1);
-		$this->prompt('['. implode('|', $this->envs) .'] : ', $this->envs);
+		$this->print('Which environment do you want to upgrade', true, 1, true, 'bb');
+		$this->prompt(implode('|', $this->envs) .': ', $this->envs, 'env');
+
+		$method = $this->environments[$this->choices['env']]['type'];
+		$this->$method();
 	}
+
+	/**	
+	 * 	Update from deploy
+	 **/
+	private function deploy() {
+		
+		$this->print('Archive for deploy', true, 1, true, 'bb');
+		$this->prompt('', array(), 'file', false);
+		
+		$this->print('', true , -1);
+
+		//	Summary
+		$this->print('Update Summary -', true, 1, true, 'bb');
+		$this->print('Site folder: ', true, 2, true, 'b0');
+		$this->print("\t[". $this->environments[$this->choices['env']]['siteFolder'] .']', true, -1);
+		
+		$this->print('Files that will be kept: ', true, 2, true, 'b0');
+		$this->print("\t[". implode(', ', $this->environments[$this->choices['env']]['persistentFiles']) .']', true, -1);
+
+		$this->print('Folders that will be kept: ', true, 2, true, 'b0');
+		$this->print("\t[". implode(', ', $this->environments[$this->choices['env']]['persistentFolders']) .']', true, -1);
+
+		$this->print('Folders to be created: ', true, 2, true, 'b0');
+		$this->print("\t[". implode(', ', $this->environments[$this->choices['env']]['createIfNotExistsFolders']) .']', true, -1);
+
+		$this->print('Pre-upgrade commands: ', true, 2, true, 'b0');
+		$this->print("\t[". implode(', ', $this->environments[$this->choices['env']]['preCommands']) .']', true, -1);
+
+		$this->print('Pos-upgrade commands: ', true, 2, true, 'b0');
+		$this->print("\t[". implode(', ', $this->environments[$this->choices['env']]['posCommands']) .']', true, -1);
+		
+	}
+
 
 	/**	
 	 * 	Prompt
 	 **/
-	public function prompt($msg, $valid = array(), $test = true) {
+	public function prompt($msg, $valid = array(), $key, $test = true) {
 
 		$this->print('', true, null, false, false);
 		
-		$prompt = '';
 		$prompt = readline($msg);
 		
-		if (!$test) {
-			$this->print("$msg [$prompt]");
-			return $prompt;	
-		} else {
-			if (in_array($prompt, $valid)){
-				$this->print("$msg [$prompt]");
-				return $prompt;
+		if ($prompt != '') {
+			if (!$test) {
+				$this->print($msg ."[$prompt]");
+				$this->choices[$key] = $prompt;
+				return true;
+			} else {
+				if (in_array($prompt, $valid)){
+					$this->print($msg ."[$prompt]");
+					$this->choices[$key] = $prompt;
+					return true;
+				}
 			}
 		}
-		return $this->prompt($msg, $valid);
+		$this->prompt($msg, $valid, $key, $test);
 	}
 
 
 	/**	
 	 * 	Check path
-	 *	@param String $message
 	 **/
 	private function pathCheck($path, $info = true, $label = false, $die = true) {
 		
@@ -181,18 +243,17 @@ class Updater {
 
 		($info) ? $this->print("Verifing path: '$pathFull' - ", 2) : null;
 		if (!file_exists($pathFull)) {
-			($info) ? $this->print('[ERROR] [Path not found]', 0, false, null, true, 'red') : null;
+			($info) ? $this->print('[ERROR] [Path not found]', false, null, true, 'br') : null;
 			($label) ? $this->print($label) : null;
 			($die) ? $this->abort() : null;
 			return false;
 		}
-		($info) ? $this->print('[OK]', 0, false, null, true, 'green') : null;
+		($info) ? $this->print('[OK]', false, null, true, 'bg') : null;
 		return true;
 	}
 
 	/**	
 	 * 	Print to screen
-	 *	@param String $message
 	 **/
 	private function print($msg, $brk = true, $pre = null, $save = true, $color = null) {
 		if ($brk) {
@@ -212,20 +273,27 @@ class Updater {
 
 	/**	
 	 * 	Execute commands
-	 *	@param String $command
 	 **/
 	private function execute($command) {
 		echo shell_exec("$command");
 	}
 
 	/**	
+	 * 	log
+	 **/
+	private function log() {
+		file_put_contents('update_'. date('dmYHi') .'.log', $this->log);
+	}
+
+	/**	
 	 * 	Abort
 	 **/
-	private function abort($message = 'Execution aborted...') {
-		$this->print('', 0);
-		$this->print($message, 1, true, 'red');
-		$this->print('', 0);
-		$this->print('', 100); 
+	private function abort($msg = 'Execution aborted...') {
+		$this->print('', true, -1);
+		$this->print($msg, true, 1, true, 'br');
+		$this->print($msg, false, null, true, 'bg');
+		$this->print('', true, -1);
+		$this->print('', true, 100); 
 		exit();
 	}
 }
