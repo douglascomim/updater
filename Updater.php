@@ -15,6 +15,12 @@ class Updater {
 	//	Prefix
 	private $pre = '>';
 
+	//	QPre
+	private $qpre = 1;
+
+	//	Log
+	private $log = '';
+
 	//	Version
 	private $version = '2.0';
 
@@ -25,8 +31,11 @@ class Updater {
 		'none' => "\033[0m",
 	);
 
+	//	Envs
+	private $envs = array();
+
 	//	Parameters
-	private $enviroments = array(
+	private $environments = array(
 		'PRODUCTION' => array(
 			'user' => 'www-data',
 			'update' => 'deploy',						// Type of update: [deploy: use master.zip | site: copy source from site]
@@ -99,8 +108,13 @@ class Updater {
 	 * 	Main method
 	 **/
 	public function start() {
-		$this->execute('clear');
+
+		foreach ($this->environments as $k => $v) {
+			$this->envs[] = $k;
+		}
+
 		$this->header();
+		$this->body();
 	}
 
 	/**	
@@ -108,36 +122,71 @@ class Updater {
 	 **/
 	private function header() {
 		
-		$this->print('', 100); 
-		$this->print('', 0);
-
-		$this->print('Updater Console');
+		$this->print('', true, 100);
+		$this->print('', true , -1);
+		
+		$this->qpre = 1;
+		$this->print('Updater Console PHP');
 		$this->print('Version: ' . $this->version);
 
-		$this->print('', 0);
-		$this->print('', 100); 
-
-		$this->print('', 0);
-		$this->pathCheck('weblaudos-master.zip');
-		$this->pathCheck('teste');
+		$this->print('', true , -1);
+		$this->print('', true, 100);
+		$this->print('', true , -1);
 	}
+
+	/**	
+	 * 	Body
+	 *  -- Get info about enviroment to will been updated
+	 *  -- Check files to update
+	 *  -- Check enviroment exists
+	 *  -- Check enviroment exists
+	 **/
+	private function body() {
+		$this->qpre = 2; 
+		
+		$this->print('Which environment do you want to upgrade ?', true, 1);
+		$this->prompt('['. implode('|', $this->envs) .'] : ', $this->envs);
+	}
+
+	/**	
+	 * 	Prompt
+	 **/
+	public function prompt($msg, $valid = array(), $test = true) {
+
+		$this->print('', true, null, false, false);
+		
+		$prompt = '';
+		$prompt = readline($msg);
+		
+		if (!$test) {
+			$this->print("$msg [$prompt]");
+			return $prompt;	
+		} else {
+			if (in_array($prompt, $valid)){
+				$this->print("$msg [$prompt]");
+				return $prompt;
+			}
+		}
+		return $this->prompt($msg, $valid);
+	}
+
 
 	/**	
 	 * 	Check path
 	 *	@param String $message
 	 **/
-	private function pathCheck($path, $info=true, $label=false, $die=true) {
+	private function pathCheck($path, $info = true, $label = false, $die = true) {
 		
 		$pathFull = $this->path . $path;
 
 		($info) ? $this->print("Verifing path: '$pathFull' - ", 2) : null;
 		if (!file_exists($pathFull)) {
-			($info) ? $this->print('[ERROR] [Path not found]', 0, false, 'red') : null;
+			($info) ? $this->print('[ERROR] [Path not found]', 0, false, null, true, 'red') : null;
 			($label) ? $this->print($label) : null;
 			($die) ? $this->abort() : null;
 			return false;
 		}
-		($info) ? $this->print('[OK]', 0, false, 'green') : null;
+		($info) ? $this->print('[OK]', 0, false, null, true, 'green') : null;
 		return true;
 	}
 
@@ -145,15 +194,20 @@ class Updater {
 	 * 	Print to screen
 	 *	@param String $message
 	 **/
-	private function print($message, $pre = 1, $brk = true, $color = null) {
+	private function print($msg, $brk = true, $pre = null, $save = true, $color = null) {
 		if ($brk) {
-			echo $this->breakLine;
-			echo str_repeat($this->pre, $pre) . ' ';
+			$msg = $this->breakLine . str_repeat($this->pre, ceil($pre ?: $this->qpre)) .' '. $msg;
 		}
 		if ($color && isset($this->colors[$color])) {
-			$message = $this->colors[$color] . $message . $this->colors['none'];
+			$msg = $this->colors[$color] . $msg . $this->colors['none'];
 		}
-		echo $message;
+		$this->execute('clear');
+		echo $this->log . $msg;
+
+		if ($save) {
+			$this->log .= $msg;
+		}
+
 	}
 
 	/**	
@@ -173,7 +227,7 @@ class Updater {
 		$this->print('', 0);
 		$this->print('', 100); 
 		exit();
-	}	
+	}
 }
 
 $updater = new Updater();
