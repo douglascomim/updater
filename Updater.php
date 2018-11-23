@@ -77,7 +77,8 @@ class Updater {
 				'/temp/reports'
 			),
 			'preCommands' => array(
-				'sudo /etc/init.d/apache2 stop',
+				'/etc/init.d/network status',
+				'/etc/init.d/apache2 stop',
 			),
 			'posCommands' => array(
 				'sudo /etc/init.d/apache2 start',
@@ -262,6 +263,9 @@ class Updater {
 		
 		//	Backup
 		$this->backup();
+
+		//	Pre-commands
+		$this->preCommands();
 	}
 
 	/**	
@@ -296,6 +300,18 @@ class Updater {
 	}
 
 	/**	
+	 * 	Pre-Commands
+	 **/
+	public function preCommands() {
+
+		$this->print('Running pre-commands...', true, 1, true, 'bb');
+		foreach ($this->environments[$this->choices['env']]['preCommands'] as $k => $v) {
+			$this->print($v, true, -4, true, 'b0');
+			echo $this->execute($v);
+		}
+	}
+
+	/**	
 	 * 	Backup
 	 **/
 	public function backup() {
@@ -325,6 +341,7 @@ class Updater {
 		}
 		
 		$this->print('Backup completed successfully', true, -4, true, 'ng');
+		$this->print('', true, 0);
 	}
 
 	/**	
@@ -406,7 +423,7 @@ class Updater {
 			$msg = $this->colors[$color] . $msg . $this->colors['none'];
 		}
 
-		$this->execute('clear');
+		echo $this->execute('clear');
 		echo $this->log['full'] . $msg;
 
 		if ($save) {
@@ -419,7 +436,7 @@ class Updater {
 	 * 	Execute commands
 	 **/
 	private function execute($command) {
-		echo shell_exec("$command");
+		return shell_exec("$command");
 	}
 
 	/**	
