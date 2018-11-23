@@ -58,12 +58,12 @@ class Updater {
 
 	//	Parameters
 	private $environments = array(
-		'HOMOLOGATION' => array(),
-		'PRODUCTION' => array(
+		'PROD' => array(
 			'user' => 'www-data',
 			'type' => 'deploy',						// Type of update: [deploy: use master.zip | site: copy source from site]
 			'siteFolder' => 'producao',
 			'sourceFolder' => 'weblaudos-master',
+			'backupFolder' => 'backup',
 			'persistentFiles' => array(
 				'/application/config/config.php',
 				'/application/config/constants.php',
@@ -138,7 +138,6 @@ class Updater {
 
 		$this->header();
 		$this->body();
-		
 		$this->log();
 	}
 
@@ -147,15 +146,15 @@ class Updater {
 	 **/
 	private function header() {
 		
-		$this->print('', true, 100);
-		$this->print('', true , 0);
+		$this->print('', true, 100, true, 'b0');
+		$this->print('', true, 0);
 		
 		$this->qpre = 1;
-		$this->print('Updater Console PHP from Git');
-		$this->print('Version: '. $this->version, true, 2);
+		$this->print('Updater Console PHP from Git Sources', true, -1, true, 'b0');
+		$this->print('Version: '. $this->version, true, -1, true, 'b0');
 
-		$this->print('', true , 0);
-		$this->print('', true, 100);
+		$this->print('', true, 0);
+		$this->print('', true, 100, true, 'b0');
 	}
 
 	/**	
@@ -172,7 +171,7 @@ class Updater {
 		
 		$this->print('Which environment do you want to upgrade -', true, 1, true, 'bb');
 		$this->prompt('['. implode(' / ', $this->envs) .'] : ', $this->envs, 'env');
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 
 		$method = $this->environments[$this->choices['env']]['type'];
 		$this->$method();
@@ -186,33 +185,33 @@ class Updater {
 		$this->print('Archive for deploy -', true, 1, true, 'bb');
 		$this->prompt('', array(), 'file', false);
 		
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 
 		//	Summary
 		$this->print('Update Summary -', true, 1, true, 'bb');
 		$this->print('Site folder: ', true, -1, true, 'b0');
 		$this->print('['. $this->environments[$this->choices['env']]['siteFolder'] .']', true, -4);
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 
 		$this->print('Files that will be kept: ', true, -1, true, 'b0');
 		$this->print('['. implode(', ', $this->environments[$this->choices['env']]['persistentFiles']) .']', true, -4);
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 
 		$this->print('Folders that will be kept: ', true, -1, true, 'b0');
 		$this->print('['. implode(', ', $this->environments[$this->choices['env']]['persistentFolders']) .']', true, -4);
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 		
 		$this->print('Folders to be created: ', true, -1, true, 'b0');
 		$this->print('['. implode(', ', $this->environments[$this->choices['env']]['createIfNotExistsFolders']) .']', true, -4);
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 		
 		$this->print('Pre-upgrade commands: ', true, -1, true, 'b0');
 		$this->print('['. implode(', ', $this->environments[$this->choices['env']]['preCommands']) .']', true, -4);
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 		
 		$this->print('Pos-upgrade commands: ', true, -1, true, 'b0');
 		$this->print('['. implode(', ', $this->environments[$this->choices['env']]['posCommands']) .']', true, -4);
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 		
 		$this->print('Files to be compressed: ', true, -1, true, 'b0');
 		if ($this->environments[$this->choices['env']]['compress']['css']['enable']) {
@@ -243,23 +242,26 @@ class Updater {
 			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['compress']['php']['ignoreFolders']) .']', true, -7);
 		}
 		
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 
 		$this->print('Do you want to proceed with the update ? -', true, 1, true, 'bb');
 		$this->prompt('[S/N] : ', array('S','N'), 'confirm');
 		
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 
 		if ($this->choices['confirm'] != 'S'){
 			$this->abort('Upgrade canceled by user');
 		}
 		
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 
 		$this->print('Starting update process ...', true, 0, true, 'bg');
 
 		//	Verifing files/folders
 		$this->deployCheckFiles();
+		
+		//	Backup
+		$this->backup();
 	}
 
 	/**	
@@ -274,23 +276,55 @@ class Updater {
 		$this->print('Folder(s) site: ', true, -1, true, 'b0');
 		$this->pathCheck($this->environments[$this->choices['env']]['siteFolder']);
 		$this->pathCheck($this->environments[$this->choices['env']]['siteFolder'] . '_old');
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 		
 		$this->print('Persistent file(s): ', true, -1, true, 'b0');
 		foreach ($this->environments[$this->choices['env']]['persistentFiles'] as $k => $v) {
 			$this->pathCheck($this->environments[$this->choices['env']]['siteFolder'] . $v);
 		}
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 		
 		$this->print('Persistent folder(s): ', true, -1, true, 'b0');
 		foreach ($this->environments[$this->choices['env']]['persistentFolders'] as $k => $v) {
 			$this->pathCheck($this->environments[$this->choices['env']]['siteFolder'] . $v);
 		}
-		$this->print('', true , 0);
+		$this->print('', true, 0);
 
 		$this->print('File to deploy: ', true, -1, true, 'b0');
 		$this->pathCheck($this->choices['file']);
-		$this->print('', true , 0);
+		$this->print('', true, 0);
+	}
+
+	/**	
+	 * 	Backup
+	 **/
+	public function backup() {
+
+		$date = date('dmY_His');
+
+		$this->print('Backing up the "'. $this->choices['env'] .'" site', true, 1, true, 'bb');
+
+		$sourceFolder = $this->environments[$this->choices['env']]['siteFolder'];
+		$destinyFolder = $this->environments[$this->choices['env']]['backupFolder'] .'/'. $this->environments[$this->choices['env']]['siteFolder'] .'_'. $date;
+
+		$this->print('Checking... ', true, -2, true, 'b0');
+		
+		if (!$this->folderCreate($destinyFolder)) {
+			$this->abort('Could not create backup: '. $this->path . $destinyFolder);
+		}
+		$this->print('', true, 0);
+
+		$this->print('Copying... ', true, -2, true, 'b0');
+		$this->print('Source: '. $this->path . $sourceFolder, true, -4);
+		$this->print('Destiny: '. $this->path . $destinyFolder, true, -4);
+		
+		$this->execute('cp -rf "'. $this->path . $sourceFolder .'" "'. $this->path . $destinyFolder .'"');
+
+		if (!$this->pathCheck($destinyFolder)) {
+			$this->abort('Could not create backup: '. $this->path . $destinyFolder);
+		}
+		
+		$this->print('Backup completed successfully', true, -4, true, 'ng');
 	}
 
 	/**	
@@ -325,7 +359,7 @@ class Updater {
 		
 		$pathFull = $this->path . $path;
 
-		($info) ? $this->print("Verifing path: '$pathFull' ", true, ($this->qpre * -1)) : null;
+		($info) ? $this->print("Checking path: '$pathFull' ", true, ($this->qpre * -1)) : null;
 		if (!file_exists($pathFull)) {
 			($info) ? $this->print('[ERROR] [Path not found]', false, null, true, 'br') : null;
 			($label) ? $this->print($label) : null;
@@ -343,8 +377,10 @@ class Updater {
 		if (!$this->pathCheck($path, true, false, false)) {
 			if (!mkdir($this->path . $path, $mask, true)) {
 				$this->abort('Could not create folder');
+				return false;
 			}
 		}
+		return true;
 	}
 
 	/**	
@@ -404,11 +440,11 @@ class Updater {
 	 * 	Abort
 	 **/
 	private function abort($msg = 'Execution aborted') {
-		$this->print('', true, 100); 
+		$this->print('', true, 100, true, 'br'); 
 		$this->print('', true, 0);
 		$this->print($msg .' ---', true, 3, true, 'br');
 		$this->print('', true, 0);
-		$this->print('', true, 100); 
+		$this->print('', true, 100, true, 'br'); 
 		exit();
 	}
 }
