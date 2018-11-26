@@ -18,6 +18,9 @@ class Updater {
 	//	QPre
 	private $qpre = 1;
 
+	//	Temp Error
+	private $terror = null;
+
 	//	Log
 	private $log = array('clean' => '', 'full' => '');
 
@@ -52,9 +55,16 @@ class Updater {
 
 	//	Processed
 	private $counts = array(
-		'css' => 0,
-		'js' => 0,
-		'php' => 0
+		'compress' => array(
+			'css' => array(0, 0), // success, error
+			'js' => array(0, 0),
+			'php' => array(0, 0)
+		),
+		'syntax' => array(
+			'css' => array(0, 0),
+			'js' => array(0, 0),
+			'php' => array(0, 0)
+		)
 	);
 
 	//	Choices
@@ -91,32 +101,41 @@ class Updater {
 			'process' => array(
 				'css' => array(
 					'enable' => true,
+					'process' => array('compress'),
 					'source' => array(
-						'/assets'
+						'/assets/css'
 					),
 					'ignoreFiles' => array(
 					),
 					'ignoreFolders' => array(
+						'/css/images',
+						'/css/font-awesome',
+						'/css/fonts',
 					),
 				), 
 				'js' => array(
-					'enable' => false,
+					'enable' => true,
+					'process' => array('compress'),
 					'source' => array(
-						'/assets/**/*'
+						'/assets/js'
 					),
 					'ignoreFiles' => array(
 					),
 					'ignoreFolders' => array(
+						'/js/plugins',
 					),
 				),
 				'php' => array(
-					'enable' => false,
+					'enable' => true,
+					'process' => array('compress', 'syntax'),
 					'source' => array(
-						'/assets/**/*'
+						'/application'
 					),
 					'ignoreFiles' => array(
 					),
 					'ignoreFolders' => array(
+						'/cache',
+						'/logs',
 					),
 				), 
 			),
@@ -266,29 +285,80 @@ class Updater {
 
 		//	Unzip Files
 		$this->print('Decompressing files -', true, 1, true, 'bb');
-		$this->print($this->path . $this->choices['file'], true, -1, true, 'b0');
-		$this->unzip($this->path . $this->choices['file']);
+		$this->print($this->path . $this->choices['file'] .' -> '. $this->path, true, -1, true, 'b0');
+		$this->unzip($this->path . $this->choices['file'], $this->path);
 		$this->print('', true, 0);
 		
 		//	Process files
 		$this->deployProcessFiles();
 	}
 
+	/**	
+	 * 	Deploy process files/folders
+	 **/
 	public function deployProcessFiles() {
 		
 		$this->print('Processing files -', true, 1, true, 'bb');
 		$this->print('Compressing: ', true, -1, true, 'b0');
 		
+		$action = 'compress';
 		foreach ($this->environments[$this->choices['env']]['process'] as $k => $v) {
 			if ($v['enable']) {
-				$this->print(strtoupper($k), true, -4);
+				$this->print(strtoupper($k), true, -4, true, 'b0');
+				if (!in_array($action, $this->environments[$this->choices['env']]['process'][$k]['process'])) {
+					$this->print("Process '$action' not enabled", true, -8, true, 'b0');
+					continue(1);
+				}
 				foreach ($v['source'] as $kk => $vv) {
 					$this->print($vv, true, -6);
-					//$this->folder($this->path . $this->environments[$this->choices['env']]['sourceFolder'] . $vv, 'teste', $k);
+					$this->folder($this->path . $this->choices['folder'] . $vv, $action, $k);
 				}
 			}
 		}
 
+		$this->print('', true, 0);
+		$this->print('Testing syntax: ', true, -1, true, 'b0');
+		
+		$action = 'syntax';
+		foreach ($this->environments[$this->choices['env']]['process'] as $k => $v) {
+			if ($v['enable']) {
+				$this->print(strtoupper($k), true, -4, true, 'b0');
+				if (!in_array($action, $this->environments[$this->choices['env']]['process'][$k]['process'])) {
+					$this->print("Process '$action' not enabled", true, -8, true, 'b0');
+					continue(1);
+				}
+				foreach ($v['source'] as $kk => $vv) {
+					$this->print($vv, true, -6);
+					$this->folder($this->path . $this->choices['folder'] . $vv, $action, $k);
+				}
+			}
+		}
+	}
+
+	/**	
+	 * 	Process compress
+	 **/
+	public function compress($path, $filename, $extension) {
+
+		$content = $this->getContent($path);
+		$content = $this->removeComments($content);
+		$content = $this->removeSpaces($content);
+		
+		return $this->putContent($path .'_new', $content);
+	}
+
+	/**	
+	 * 	Check sintax
+	 **/
+	public function syntax($path, $filename, $extension) {
+
+		$this->terror = null;
+		$result = $this->execute("php -l '$path'");
+		if (substr($result, 0, 25) == 'No syntax errors detected') {
+			return true;
+		}
+		$this->terror = trim($result);
+		return false;
 	}
 
 	/**	
@@ -394,10 +464,25 @@ class Updater {
 	}
 
 	/**	
+	 * 	Get Content of file
+	 **/
+	public function getContent($path) {
+		return file_get_contents($path);
+	}
+
+	/**	
+	 * 	Put Content of file
+	 **/
+	public function putContent($path, $data) {
+		return file_put_contents($path, $data);
+	}
+
+	/**	
 	 * 	Unzip
 	 **/
-	public function unzip($path) {
-		$this->execute('unzip -o "'. $path .'" > /dev/null 2>&1');
+	public function unzip($path, $dst = null) {
+		$dst = ($dst) ? '-d "'. $dst .'"' : '';
+		$this->execute('unzip -o "'. $path .'" '. $dst .' > /dev/null 2>&1');
 	}
 
 	/**	
@@ -442,27 +527,65 @@ class Updater {
 		    if (!$file->isDot()) {
 		    	if ($file->isDir()) {
 		            $path = $file->getPathname();
-		            foreach ($this->fignore as $k => $v) {
+		            foreach ($this->environments[$this->choices['env']]['process'][$extension]['ignoreFolders'] as $k => $v) {
 			            if (strpos($path, $v)) {
 		            		continue(2);
 		            	}
 		            }
-		            $this->print('Folder: '. $path, true, -1);
-	                $this->folder($path, $func, $extension);
+		            $this->print($path, true, -6);
+		            $this->folder($path, $func, $extension);
 		        }
 		        //	Is a file?
-		        if ( $file->isFile()) {
+		        if ($file->isFile()) {
 		            $filePath = $file->getPathname();
 		            $fileName = $file->getFilename();
 		            // Is a extension required ?
-		            if (preg_match("/\.$extension/", $fileName) && !in_array($fileName, $this->ignore)) {
-			            //$o->message($o->lbltab . ' | > ' . $filePath, true, true);
-			            file_put_contents($filePath, $this->$func(file_get_contents($filePath), $fileName, $filePath, $extension));
-			            $this->counts[$extension]++;
+		            if (preg_match("/\.$extension$/", $fileName) && !in_array($fileName, $this->environments[$this->choices['env']]['process'][$extension]['ignoreFiles'])) {
+		            	$this->print('File: '. $filePath, true, -8);
+	            		if ($this->$func($filePath, $fileName, $extension)) {
+		            		$this->print(' [OK]', false, 0, true, 'bg');
+			            	$this->counts[$func][$extension][0]++;
+			           	} else {
+			           		$this->print(' [ERROR]', false, 0, true, 'br');
+			            	$this->counts[$func][$extension][1]++;
+			           		if ($this->terror) {
+			           			$this->print($this->terror, true, -8, true, 'br');
+			           		}
+			           	}
 		            }
 		        }
 		    }
 		}
+	}
+
+	/**	
+	 * 	Remove comments
+	 **/
+	private function removeComments($content){
+
+		$content = preg_replace('#^\s*//.+$#m', ' ', $content);
+		$content = preg_replace('#//[a-z0-9]+$#m', "", $content);
+		$content = preg_replace('!/\*.*?\*/!s', ' ', $content);
+		$content = preg_replace( '![\s\t]//.*?\n!' , ' ', $content ); //
+		$content = preg_replace('/<\!--.*-->/', ' ', $content);
+		return $content;
+	}
+
+	/**	
+	 * 	Remove spaces
+	 **/
+	private function removeSpaces($content){
+
+		$content = preg_replace('/\n\s*\n/', "\n", $content);
+		$content = preg_replace('/[\t\n\r]/' , ' ', $content);
+		$content = preg_replace('/ {2,}/' , ' ', $content);
+		$content = preg_replace('/\r\n+/' , ' ', $content);
+		$content = preg_replace('/; \}/' , ';}', $content);
+		$content = preg_replace('/\{ /' , '{', $content);
+		$content = preg_replace('/\} /' , '}', $content);
+		$content = preg_replace('/: /' , ':', $content);
+		$content = preg_replace('/(= | =)/' , '=', $content);
+		return $content;
 	}
 
 	/**	
