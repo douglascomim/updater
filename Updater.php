@@ -50,6 +50,13 @@ class Updater {
 		'none' => "\033[0m",
 	);
 
+	//	Processed
+	private $counts = array(
+		'css' => 0,
+		'js' => 0,
+		'php' => 0
+	);
+
 	//	Choices
 	private $choices = array();
 
@@ -62,7 +69,6 @@ class Updater {
 			'user' => 'www-data',
 			'type' => 'deploy',						// Type of update: [deploy: use master.zip | site: copy source from site]
 			'siteFolder' => 'producao',
-			'sourceFolder' => 'weblaudos-master',
 			'backupFolder' => 'backup',
 			'persistentFiles' => array(
 				'/application/config/config.php',
@@ -77,17 +83,16 @@ class Updater {
 				'/temp/reports'
 			),
 			'preCommands' => array(
-				'/etc/init.d/network status',
-				'/etc/init.d/apache2 stop',
+				//'/etc/init.d/network status',
 			),
 			'posCommands' => array(
-				'sudo /etc/init.d/apache2 start',
+				//'sudo /etc/init.d/apache2 start',
 			),
-			'compress' => array(
+			'process' => array(
 				'css' => array(
 					'enable' => true,
 					'source' => array(
-						'/assets/**/*'
+						'/assets'
 					),
 					'ignoreFiles' => array(
 					),
@@ -95,17 +100,7 @@ class Updater {
 					),
 				), 
 				'js' => array(
-					'enable' => true,
-					'source' => array(
-						'/assets/**/*'
-					),
-					'ignoreFiles' => array(
-					),
-					'ignoreFolders' => array(
-					),
-				),
-				'html' => array(
-					'enable' => true,
+					'enable' => false,
 					'source' => array(
 						'/assets/**/*'
 					),
@@ -115,7 +110,7 @@ class Updater {
 					),
 				),
 				'php' => array(
-					'enable' => true,
+					'enable' => false,
 					'source' => array(
 						'/assets/**/*'
 					),
@@ -185,6 +180,8 @@ class Updater {
 		
 		$this->print('Archive for deploy -', true, 1, true, 'bb');
 		$this->prompt('', array(), 'file', false);
+		//	Folder for sources
+		$this->choices['folder'] = substr($this->choices['file'], 0, -4);
 		
 		$this->print('', true, 0);
 
@@ -214,43 +211,43 @@ class Updater {
 		$this->print('['. implode(', ', $this->environments[$this->choices['env']]['posCommands']) .']', true, -4);
 		$this->print('', true, 0);
 		
-		$this->print('Files to be compressed: ', true, -1, true, 'b0');
-		if ($this->environments[$this->choices['env']]['compress']['css']['enable']) {
+		$this->print('Files to be processed: ', true, -1, true, 'b0');
+		if ($this->environments[$this->choices['env']]['process']['css']['enable']) {
 			$this->print("CSS", true, -4);
-			$this->print("Sources: [". implode(', ', $this->environments[$this->choices['env']]['compress']['css']['source']) .']', true, -7);
-			$this->print("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['compress']['css']['ignoreFiles']) .']', true, -7);
-			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['compress']['css']['ignoreFolders']) .']', true, -7);
+			$this->print("Sources: [". implode(', ', $this->environments[$this->choices['env']]['process']['css']['source']) .']', true, -7);
+			$this->print("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['process']['css']['ignoreFiles']) .']', true, -7);
+			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['process']['css']['ignoreFolders']) .']', true, -7);
 		}
 		
-		if ($this->environments[$this->choices['env']]['compress']['js']['enable']) {
+		if ($this->environments[$this->choices['env']]['process']['js']['enable']) {
 			$this->print("JS", true, -4);
-			$this->print("Sources: [". implode(', ', $this->environments[$this->choices['env']]['compress']['js']['source']) .']', true, -7);
-			$this->print("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['compress']['js']['ignoreFiles']) .']', true, -7);
-			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['compress']['js']['ignoreFolders']) .']', true, -7);
+			$this->print("Sources: [". implode(', ', $this->environments[$this->choices['env']]['process']['js']['source']) .']', true, -7);
+			$this->print("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['process']['js']['ignoreFiles']) .']', true, -7);
+			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['process']['js']['ignoreFolders']) .']', true, -7);
 		}
 
-		if ($this->environments[$this->choices['env']]['compress']['html']['enable']) {
+		if ($this->environments[$this->choices['env']]['process']['html']['enable']) {
 			$this->print("HTML", true, -4);
-			$this->print("Sources: [". implode(', ', $this->environments[$this->choices['env']]['compress']['html']['source']) .']', true, -7);
-			$this->print("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['compress']['html']['ignoreFiles']) .']', true, -7);
-			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['compress']['html']['ignoreFolders']) .']', true, -7);
+			$this->print("Sources: [". implode(', ', $this->environments[$this->choices['env']]['process']['html']['source']) .']', true, -7);
+			$this->print("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['process']['html']['ignoreFiles']) .']', true, -7);
+			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['process']['html']['ignoreFolders']) .']', true, -7);
 		}
 
-		if ($this->environments[$this->choices['env']]['compress']['php']['enable']) {
+		if ($this->environments[$this->choices['env']]['process']['php']['enable']) {
 			$this->print("PHP", true, -4);
-			$this->print("Sources: [". implode(', ', $this->environments[$this->choices['env']]['compress']['php']['source']) .']', true, -7);
-			$this->print("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['compress']['php']['ignoreFiles']) .']', true, -7);
-			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['compress']['php']['ignoreFolders']) .']', true, -7);
+			$this->print("Sources: [". implode(', ', $this->environments[$this->choices['env']]['process']['php']['source']) .']', true, -7);
+			$this->print("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['process']['php']['ignoreFiles']) .']', true, -7);
+			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['process']['php']['ignoreFolders']) .']', true, -7);
 		}
 		
 		$this->print('', true, 0);
 
-		$this->print('Do you want to proceed with the update ? -', true, 1, true, 'bb');
-		$this->prompt('[S/N] : ', array('S','N'), 'confirm');
+		$this->print('Do you want to proceed with the update? -', true, 1, true, 'bb');
+		$this->prompt('[Y/N] : ', array('Y','N'), 'confirm');
 		
 		$this->print('', true, 0);
 
-		if ($this->choices['confirm'] != 'S'){
+		if ($this->choices['confirm'] != 'Y'){
 			$this->abort('Upgrade canceled by user');
 		}
 		
@@ -262,10 +259,36 @@ class Updater {
 		$this->deployCheckFiles();
 		
 		//	Backup
-		$this->backup();
+		//$this->backup();
 
 		//	Pre-commands
 		$this->preCommands();
+
+		//	Unzip Files
+		$this->print('Decompressing files -', true, 1, true, 'bb');
+		$this->print($this->path . $this->choices['file'], true, -1, true, 'b0');
+		$this->unzip($this->path . $this->choices['file']);
+		$this->print('', true, 0);
+		
+		//	Process files
+		$this->deployProcessFiles();
+	}
+
+	public function deployProcessFiles() {
+		
+		$this->print('Processing files -', true, 1, true, 'bb');
+		$this->print('Compressing: ', true, -1, true, 'b0');
+		
+		foreach ($this->environments[$this->choices['env']]['process'] as $k => $v) {
+			if ($v['enable']) {
+				$this->print(strtoupper($k), true, -4);
+				foreach ($v['source'] as $kk => $vv) {
+					$this->print($vv, true, -6);
+					//$this->folder($this->path . $this->environments[$this->choices['env']]['sourceFolder'] . $vv, 'teste', $k);
+				}
+			}
+		}
+
 	}
 
 	/**	
@@ -275,7 +298,7 @@ class Updater {
 
 		$this->qpre = 4;
 
-		$this->print('Checking files/folders important for updating...', true, 1, true, 'bb');
+		$this->print('Checking files/folders important for updating -', true, 1, true, 'bb');
 
 		$this->print('Folder(s) site: ', true, -1, true, 'b0');
 		$this->pathCheck($this->environments[$this->choices['env']]['siteFolder']);
@@ -304,11 +327,12 @@ class Updater {
 	 **/
 	public function preCommands() {
 
-		$this->print('Running pre-commands...', true, 1, true, 'bb');
+		$this->print('Running pre-commands -', true, 1, true, 'bb');
 		foreach ($this->environments[$this->choices['env']]['preCommands'] as $k => $v) {
-			$this->print($v, true, -4, true, 'b0');
-			echo $this->execute($v);
+			$this->print($v, true, -1, true, 'b0');
+			$this->print($this->execute($v), true, 0);
 		}
+		$this->print('', true, 0);
 	}
 
 	/**	
@@ -318,19 +342,19 @@ class Updater {
 
 		$date = date('dmY_His');
 
-		$this->print('Backing up the "'. $this->choices['env'] .'" site', true, 1, true, 'bb');
+		$this->print('Backing up the "'. $this->choices['env'] .'" site -', true, 1, true, 'bb');
 
 		$sourceFolder = $this->environments[$this->choices['env']]['siteFolder'];
 		$destinyFolder = $this->environments[$this->choices['env']]['backupFolder'] .'/'. $this->environments[$this->choices['env']]['siteFolder'] .'_'. $date;
 
-		$this->print('Checking... ', true, -2, true, 'b0');
+		$this->print('Checking... ', true, -1, true, 'b0');
 		
 		if (!$this->folderCreate($destinyFolder)) {
 			$this->abort('Could not create backup: '. $this->path . $destinyFolder);
 		}
 		$this->print('', true, 0);
 
-		$this->print('Copying... ', true, -2, true, 'b0');
+		$this->print('Copying... ', true, -1, true, 'b0');
 		$this->print('Source: '. $this->path . $sourceFolder, true, -4);
 		$this->print('Destiny: '. $this->path . $destinyFolder, true, -4);
 		
@@ -370,6 +394,13 @@ class Updater {
 	}
 
 	/**	
+	 * 	Unzip
+	 **/
+	public function unzip($path) {
+		$this->execute('unzip -o "'. $path .'" > /dev/null 2>&1');
+	}
+
+	/**	
 	 * 	Check path
 	 **/
 	private function pathCheck($path, $info = true, $label = false, $die = true) {
@@ -398,6 +429,40 @@ class Updater {
 			}
 		}
 		return true;
+	}
+
+	/**	
+	 * 	Navigate into folders
+	 **/
+	public function folder($path, $func, $extension){
+		
+		$dir = new DirectoryIterator($path);
+		
+		foreach ($dir as $file) {
+		    if (!$file->isDot()) {
+		    	if ($file->isDir()) {
+		            $path = $file->getPathname();
+		            foreach ($this->fignore as $k => $v) {
+			            if (strpos($path, $v)) {
+		            		continue(2);
+		            	}
+		            }
+		            $this->print('Folder: '. $path, true, -1);
+	                $this->folder($path, $func, $extension);
+		        }
+		        //	Is a file?
+		        if ( $file->isFile()) {
+		            $filePath = $file->getPathname();
+		            $fileName = $file->getFilename();
+		            // Is a extension required ?
+		            if (preg_match("/\.$extension/", $fileName) && !in_array($fileName, $this->ignore)) {
+			            //$o->message($o->lbltab . ' | > ' . $filePath, true, true);
+			            file_put_contents($filePath, $this->$func(file_get_contents($filePath), $fileName, $filePath, $extension));
+			            $this->counts[$extension]++;
+		            }
+		        }
+		    }
+		}
 	}
 
 	/**	
