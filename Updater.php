@@ -129,9 +129,11 @@ class Updater {
 					'enable' => true,
 					'process' => array('compress', 'syntax'),
 					'source' => array(
-						'/application'
+						'/application',
+						//'/system',
 					),
 					'ignoreFiles' => array(
+						'smiley_helper.php'
 					),
 					'ignoreFolders' => array(
 						'/cache',
@@ -338,6 +340,27 @@ class Updater {
 				}
 			}
 		}
+
+		$this->print('', true, 0);
+		$this->print('Summary of processing -', true, 1, true, 'bb');
+
+		foreach (array('compress','syntax') as $k => $v) {
+
+			$this->print(strtoupper($v), true, -4, true, 'b0');
+			foreach ($this->counts[$v] as $kk => $vv) {
+				$this->print(strtoupper($kk), true, -8, true, 'b0');
+				$this->print("\tTotal: ". ($vv[0] + $vv[1]), false, 0, true, 'b0');
+				$this->print("\tSuccess: ". $vv[0], false, 0, true, 'bg');
+				$this->print("\tError: ". $vv[1], false, 0, true, 'br');
+			}
+		}
+
+		$this->print('', true, 0);
+		$this->print('Do you want to continue the update? -', true, 1, true, 'bb');
+		$this->prompt('[Y/N] : ', array('Y','N'), 'confirm');
+		if ($this->choices['confirm'] != 'Y'){
+			$this->abort('Upgrade canceled by user');
+		}
 	}
 
 	/**	
@@ -346,6 +369,11 @@ class Updater {
 	public function compress($path, $filename, $extension) {
 
 		$content = $this->getContent($path);
+
+		if (strlen($content) == 0) {
+			return true;
+		}
+
 		$content = $this->removeComments($content);
 		$content = $this->removeSpaces($content);
 		
@@ -569,8 +597,8 @@ class Updater {
 	 **/
 	private function removeComments($content){
 
-		$content = preg_replace('#^(\s|\w)*//.+$#m', ' ', $content);
-		//$content = preg_replace('#//[a-z0-9]+$#m', "", $content);
+		$content = preg_replace('#[\s\n\t]//.+$#m', ' ', $content);
+			//$content = preg_replace('#//[a-z0-9]+$#m', "", $content);
 		$content = preg_replace('![\s\t\n\r]+/\*.*?\*/!s', ' ', $content);
 		$content = preg_replace( '![\s\t]//.*?\n!' , ' ', $content ); //
 		$content = preg_replace('/<\!--.*-->/', ' ', $content);
@@ -585,33 +613,15 @@ class Updater {
 
 		$content = preg_replace('/\n\s*\n/', ' ', $content);
 		$content = preg_replace('/[\t\n\r]/', ' ', $content);
+		//$content = preg_replace('/\r\n+/', ' ', $content);
 		$content = preg_replace('/ {2,}/', ' ', $content);
-		$content = preg_replace('/\r\n+/', ' ', $content);
-		
-		$content = preg_replace('/\} /', '}', $content);
-		$content = preg_replace('/; \}/', ';}', $content);
-		$content = preg_replace('/(\{ | \{)/', '{', $content);
-		
-		$content = preg_replace('/\( /', '(', $content);
-		$content = preg_replace('/ \)/', ')', $content);
-		
-		$content = preg_replace('/ \]/', ']', $content);
-		$content = preg_replace('/\[ /', '[', $content);
-		
-		$content = preg_replace('/; /', ';', $content);
-		$content = preg_replace('/ ;/', ';', $content);
-		$content = preg_replace('/: /' , ':', $content);
-		$content = preg_replace('/ :/' , ':', $content);
-		$content = preg_replace('/= /' , '=', $content);
-		$content = preg_replace('/ =/' , '=', $content);
-		$content = preg_replace('/, /', ',', $content);
-		$content = preg_replace('/ ,/', ',', $content);
-		$content = preg_replace('/ \./', '.', $content);
-		$content = preg_replace('/\. /', '.', $content);
 
 		$content = preg_replace('/> </', '><', $content);
 		$content = preg_replace('/=> /', '=>', $content);
 
+		$content = preg_replace('/<<<EOF/', "<<<EOF\n", $content);
+		$content = preg_replace('/EOF;/', "\nEOF;", $content);
+		
 		return $content;
 	}
 
@@ -658,7 +668,7 @@ class Updater {
 	 * 	Log
 	 **/
 	private function log() {
-		file_put_contents('update_'. date('dmYHi') .'.log', $this->log['clean']);
+		//file_put_contents('update_'. date('dmYHi') .'.log', $this->log['clean']);
 	}
 
 	/**	
@@ -673,9 +683,7 @@ class Updater {
 	 **/
 	private function abort($msg = 'Execution aborted') {
 		$this->print('', true, 100, true, 'br'); 
-		$this->print('', true, 0);
 		$this->print($msg .' ---', true, 3, true, 'br');
-		$this->print('', true, 0);
 		$this->print('', true, 100, true, 'br'); 
 		exit();
 	}
