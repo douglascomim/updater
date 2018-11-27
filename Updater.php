@@ -55,6 +55,15 @@ class Updater {
 
 	//	Processed
 	private $counts = array(
+		'persistent_files' => array(
+			'copy' => array(0, 0)
+		),
+		'persistent_folders' => array(
+			'copy' => array(0, 0)
+		),
+		'create_folders' => array(
+			'create' => array(0, 0)
+		),
 		'compress' => array(
 			'css' => array(0, 0), // success, error
 			'js' => array(0, 0),
@@ -64,7 +73,7 @@ class Updater {
 			'css' => array(0, 0),
 			'js' => array(0, 0),
 			'php' => array(0, 0)
-		)
+		),
 	);
 
 	//	Choices
@@ -76,7 +85,7 @@ class Updater {
 	//	Parameters
 	private $environments = array(
 		'PROD' => array(
-			'user' => 'www-data',
+			'user' => 'douglas',
 			'type' => 'deploy',						// Type of update: [deploy: use master.zip | site: copy source from site]
 			'siteFolder' => 'producao',
 			'backupFolder' => 'backup',
@@ -130,7 +139,9 @@ class Updater {
 					'process' => array('compress', 'syntax'),
 					'source' => array(
 						'/application',
-						//'/system',
+						'/system',
+						'/assets/php',
+						'/assets/plugins/wideimage',
 					),
 					'ignoreFiles' => array(
 						'smiley_helper.php'
@@ -138,7 +149,7 @@ class Updater {
 					'ignoreFolders' => array(
 						'/cache',
 						'/logs',
-						'/captcha',
+						'/assets/php/captcha',
 					),
 				), 
 			),
@@ -204,12 +215,10 @@ class Updater {
 		
 		$this->print('Archive for deploy -', true, 1, true, 'bb');
 		$this->prompt('', array(), 'file', false);
-		//	Folder for sources
 		$this->choices['folder'] = substr($this->choices['file'], 0, -4);
 		
-		$this->print('', true, 0);
-
 		//	Summary
+		$this->print('', true, 100, true, 'bb');
 		$this->print('Update Summary -', true, 1, true, 'bb');
 		$this->print('Site folder: ', true, -1, true, 'b0');
 		$this->print('['. $this->environments[$this->choices['env']]['siteFolder'] .']', true, -4);
@@ -264,7 +273,7 @@ class Updater {
 			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['process']['php']['ignoreFolders']) .']', true, -7);
 		}
 		
-		$this->print('', true, 0);
+		$this->print('', true, 100, true, 'bb');
 
 		$this->print('Do you want to proceed with the update? -', true, 1, true, 'bb');
 		$this->prompt('[Y/N] : ', array('Y','N'), 'confirm');
@@ -291,11 +300,21 @@ class Updater {
 		$this->preCommands();
 
 		//	Unzip Files
-		$this->print('Decompressing files -', true, 1, true, 'bb');
-		$this->print($this->path . $this->choices['file'] .' -> '. $this->path, true, -1, true, 'b0');
+		$this->print('Decompressing source files -', true, 1, true, 'bb');
+		$this->print('Unzip:', true, -1, true, 'b0');
+		$this->print($this->path . $this->choices['file'] .' -> '. $this->path, true, -4);
 		$this->unzip($this->path . $this->choices['file'], $this->path);
 		$this->print('', true, 0);
 		
+		//	Replace persistent files
+		$this->replacePersistentFiles();
+
+		//	Replace persistent folders
+		$this->replacePersistentFolders();
+
+		//	Create folders
+		$this->createFolders();
+
 		//	Process files
 		$this->deployProcessFiles();
 	}
@@ -344,23 +363,77 @@ class Updater {
 		$this->print('', true, 0);
 		$this->print('Summary of processing -', true, 1, true, 'bb');
 
-		foreach (array('compress','syntax') as $k => $v) {
+		foreach ($this->counts as $k => $v) {
 
-			$this->print(strtoupper($v), true, -4, true, 'b0');
-			foreach ($this->counts[$v] as $kk => $vv) {
+			$this->print(strtoupper($k), true, -4, true, 'b0');
+			foreach ($this->counts[$k] as $kk => $vv) {
 				$this->print(strtoupper($kk), true, -8, true, 'b0');
-				$this->print("\tTotal: ". ($vv[0] + $vv[1]), false, 0, true, 'b0');
-				$this->print("\tSuccess: ". $vv[0], false, 0, true, 'bg');
-				$this->print("\tError: ". $vv[1], false, 0, true, 'br');
+				$this->print("\t\t\t". $vv[1], false, 0, true, 'br');
+				$this->print(' / ', false, 0);
+				$this->print($vv[0], false, 0, true, 'bg');
+				$this->print(' / ', false, 0);
+				$this->print(($vv[0] + $vv[1]), false, 0, true, 'b0');
 			}
 		}
 
-		$this->print('', true, 0);
+		$this->print('', true, 100, true, 'bb');
 		$this->print('Do you want to continue the update? -', true, 1, true, 'bb');
 		$this->prompt('[Y/N] : ', array('Y','N'), 'confirm');
 		if ($this->choices['confirm'] != 'Y'){
 			$this->abort('Upgrade canceled by user');
 		}
+	}
+
+	/**	
+	 * 	Replace persistent files
+	 **/
+	public function replacePersistentFiles() {
+		
+		$this->print('Persistent File(s) -', true, 1, true, 'bb');
+		$this->print('Copying Files:', true, -1, true, 'b0');
+		foreach ($this->environments[$this->choices['env']]['persistentFiles'] as $k => $v) {
+			if ($this->path && $this->environments[$this->choices['env']]['siteFolder'] && $v) {
+				$this->print('Copying: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .' -> '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
+				$this->execute('cp -fp "'. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .'" "'. $this->path . $this->choices['folder'] . $v .'"');
+				$this->counts['persistent_files']['copy'][0]++;
+			}
+		}
+		$this->print('', true, 0);
+	}
+
+	/**	
+	 * 	Replace persistent folders
+	 **/
+	public function replacePersistentFolders() {
+		
+		$this->print('Persistent Folder(s) -', true, 1, true, 'bb');
+		$this->print('Copying Folders:', true, -1, true, 'b0');
+		foreach ($this->environments[$this->choices['env']]['persistentFolders'] as $k => $v) {
+			if ($this->path && $this->environments[$this->choices['env']]['siteFolder'] && $v) {
+				$this->print('Copying: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .' -> '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
+				$this->execute('cp -Rfp "'. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .'" "'. $this->path . $this->choices['folder'] .'"');
+				$this->counts['persistent_folders']['copy'][0]++;
+			}
+		}
+		$this->print('', true, 0);
+	}
+
+	/**	
+	 * 	Create folders
+	 **/
+	public function createFolders() {
+		
+		$this->print('Creating Folder(s) -', true, 1, true, 'bb');
+		$this->print('Folder(s):', true, -1, true, 'b0');
+		foreach ($this->environments[$this->choices['env']]['createIfNotExistsFolders'] as $k => $v) {
+			if ($this->path && $this->choices['folder'] && $v) {
+				$this->print('Creating: '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
+				$this->execute('mkdir "'. $this->path . $this->choices['folder'] . $v .'"');
+				$this->execute('echo > "'. $this->path . $this->choices['folder'] . $v .'/index.html"');
+				$this->counts['create_folders']['create'][0]++;
+			}
+		}
+		$this->print('', true, 0);
 	}
 
 	/**	
