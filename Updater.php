@@ -136,6 +136,7 @@ class Updater {
 					'ignoreFolders' => array(
 						'/cache',
 						'/logs',
+						'/captcha',
 					),
 				), 
 			),
@@ -182,7 +183,9 @@ class Updater {
 	private function body() {
 		$this->qpre = 2; 
 		
-		$this->print('Gathering Information for Upgrade', true, 0, true, 'bg');
+		$this->print('', true, 100, true, 'bb');
+		$this->print('Gathering Information for Upgrade', true, 0, true, 'bb');
+		$this->print('', true, 100, true, 'bb');
 		
 		$this->print('Which environment do you want to upgrade -', true, 1, true, 'bb');
 		$this->prompt('['. implode(' / ', $this->envs) .'] : ', $this->envs, 'env');
@@ -272,7 +275,9 @@ class Updater {
 		
 		$this->print('', true, 0);
 
-		$this->print('Starting update process ...', true, 0, true, 'bg');
+		$this->print('', true, 100, true, 'bb');
+		$this->print('Starting update process ...', true, 0, true, 'bb');
+		$this->print('', true, 100, true, 'bb');
 
 		//	Verifing files/folders
 		$this->deployCheckFiles();
@@ -310,7 +315,7 @@ class Updater {
 					continue(1);
 				}
 				foreach ($v['source'] as $kk => $vv) {
-					$this->print($vv, true, -6);
+					$this->print($vv, true, -6, true, 'b0');
 					$this->folder($this->path . $this->choices['folder'] . $vv, $action, $k);
 				}
 			}
@@ -344,7 +349,8 @@ class Updater {
 		$content = $this->removeComments($content);
 		$content = $this->removeSpaces($content);
 		
-		return $this->putContent($path .'_new', $content);
+		//return $this->putContent($path .'_new', $content);
+		return $this->putContent($path, $content);
 	}
 
 	/**	
@@ -532,7 +538,7 @@ class Updater {
 		            		continue(2);
 		            	}
 		            }
-		            $this->print($path, true, -6);
+		            $this->print($path, true, -6, true, 'b0');
 		            $this->folder($path, $func, $extension);
 		        }
 		        //	Is a file?
@@ -563,11 +569,12 @@ class Updater {
 	 **/
 	private function removeComments($content){
 
-		$content = preg_replace('#^\s*//.+$#m', ' ', $content);
-		$content = preg_replace('#//[a-z0-9]+$#m', "", $content);
-		$content = preg_replace('!/\*.*?\*/!s', ' ', $content);
+		$content = preg_replace('#^(\s|\w)*//.+$#m', ' ', $content);
+		//$content = preg_replace('#//[a-z0-9]+$#m', "", $content);
+		$content = preg_replace('![\s\t\n\r]+/\*.*?\*/!s', ' ', $content);
 		$content = preg_replace( '![\s\t]//.*?\n!' , ' ', $content ); //
 		$content = preg_replace('/<\!--.*-->/', ' ', $content);
+
 		return $content;
 	}
 
@@ -576,15 +583,35 @@ class Updater {
 	 **/
 	private function removeSpaces($content){
 
-		$content = preg_replace('/\n\s*\n/', "\n", $content);
-		$content = preg_replace('/[\t\n\r]/' , ' ', $content);
-		$content = preg_replace('/ {2,}/' , ' ', $content);
-		$content = preg_replace('/\r\n+/' , ' ', $content);
-		$content = preg_replace('/; \}/' , ';}', $content);
-		$content = preg_replace('/\{ /' , '{', $content);
-		$content = preg_replace('/\} /' , '}', $content);
+		$content = preg_replace('/\n\s*\n/', ' ', $content);
+		$content = preg_replace('/[\t\n\r]/', ' ', $content);
+		$content = preg_replace('/ {2,}/', ' ', $content);
+		$content = preg_replace('/\r\n+/', ' ', $content);
+		
+		$content = preg_replace('/\} /', '}', $content);
+		$content = preg_replace('/; \}/', ';}', $content);
+		$content = preg_replace('/(\{ | \{)/', '{', $content);
+		
+		$content = preg_replace('/\( /', '(', $content);
+		$content = preg_replace('/ \)/', ')', $content);
+		
+		$content = preg_replace('/ \]/', ']', $content);
+		$content = preg_replace('/\[ /', '[', $content);
+		
+		$content = preg_replace('/; /', ';', $content);
+		$content = preg_replace('/ ;/', ';', $content);
 		$content = preg_replace('/: /' , ':', $content);
-		$content = preg_replace('/(= | =)/' , '=', $content);
+		$content = preg_replace('/ :/' , ':', $content);
+		$content = preg_replace('/= /' , '=', $content);
+		$content = preg_replace('/ =/' , '=', $content);
+		$content = preg_replace('/, /', ',', $content);
+		$content = preg_replace('/ ,/', ',', $content);
+		$content = preg_replace('/ \./', '.', $content);
+		$content = preg_replace('/\. /', '.', $content);
+
+		$content = preg_replace('/> </', '><', $content);
+		$content = preg_replace('/=> /', '=>', $content);
+
 		return $content;
 	}
 
