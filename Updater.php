@@ -90,6 +90,7 @@ class Updater {
 		'PROD' => array(
 			'user' => 'douglas',
 			'type' => 'deploy',						// Type of update: [deploy: use master.zip | site: copy source from site]
+			'maskFolder' => '0755',
 			'siteFolder' => 'producao',
 			'backupFolder' => 'backup',
 			'persistentFiles' => array(
@@ -191,10 +192,6 @@ class Updater {
 
 	/**	
 	 * 	Body
-	 *  -- Get info about enviroment to will been updated
-	 *  -- Check files to update
-	 *  -- Check enviroment exists
-	 *  -- Check enviroment exists
 	 **/
 	private function body() {
 		$this->qpre = 2; 
@@ -206,9 +203,15 @@ class Updater {
 		$this->print('Which environment do you want to upgrade -', true, 1, true, 'bb');
 		$this->prompt('['. implode(' / ', $this->envs) .'] : ', $this->envs, 'env');
 		$this->print('', true, 0);
-
+		
 		$method = $this->environments[$this->choices['env']]['type'];
 		$this->$method();
+		
+		//	Finish
+		$this->print('', true, 0);
+		$this->print('', true, 100, true, 'bb');
+		$this->print('Finished update process', true, -1, true, 'bb');
+		$this->print('', true, 100, true, 'bb');
 	}
 
 	/**	
@@ -285,8 +288,6 @@ class Updater {
 		$this->print('Do you want to proceed with the update? -', true, 1, true, 'bb');
 		$this->prompt('[Y/N] : ', array('Y','N'), 'confirm');
 		
-		$this->print('', true, 0);
-
 		if ($this->choices['confirm'] != 'Y'){
 			$this->abort('Upgrade canceled by user');
 		}
@@ -301,7 +302,7 @@ class Updater {
 		$this->deployCheckFiles();
 		
 		//	Backup
-		//$this->backup();
+		$this->backup();
 
 		//	Pre-commands
 		$this->preCommands();
@@ -327,11 +328,24 @@ class Updater {
 
 		//	Process files
 		$this->deployProcessFiles();
+
+		$this->print('', true, 100, true, 'bb');
+		
+		//	Remove old site
+		$this->removeSiteOld();
+		
+		//	Move new sites
+		$this->moveSites();
+		
+		//	Remove files of installation
+		$this->removeFiles();
+
+		$this->print('', true, 0);
 	}
 
 	/**	
 	 * 	Deploy process files/folders
-	 **/
+	**/
 	public function deployProcessFiles() {
 		
 		$this->print('Processing files -', true, 1, true, 'bb');
@@ -371,14 +385,46 @@ class Updater {
 		}
 
 		$this->print('', true, 0);
+		$this->print('Changing Permissions -', true, 1, true, 'bb');
+		$this->print('Folder:', true, -1, true, 'b0');
+		$this->print('Permissions: '. $this->environments[$this->choices['env']]['maskFolder'], true, -4, true, 'n0');
+		$this->print('Changing: '. $this->path . $this->choices['folder'], true, -4, true, 'n0');
+		
+		if (!$this->pathCheck($this->choices['folder'], false, false, false)) {
+			$this->print(' [FAIL]', false, 0, true, 'nr');
+			$this->abort('Folder not found.');
+		}
+		if ($this->folderPermission($this->path . $this->choices['folder'], $this->environments[$this->choices['env']]['maskFolder'])) {
+			$this->print(' [OK]', false, 0, true, 'ng');
+		} else {
+			$this->print(' [FAIL]', false, 0, true, 'nr');
+		}
+		
+		$this->print('', true, 0);
+		$this->print('Changing Owner -', true, 1, true, 'bb');
+		$this->print('Folder:', true, -1, true, 'b0');
+		$this->print('Owner: '. $this->environments[$this->choices['env']]['user'] .':'. $this->environments[$this->choices['env']]['user'], true, -4, true, 'n0');
+		$this->print('Changing: '. $this->path . $this->choices['folder'], true, -4, true, 'n0');
+		
+		if (!$this->pathCheck($this->choices['folder'], false, false, false)) {
+			$this->print(' [FAIL]', false, 0, true, 'nr');
+			$this->abort('Folder not found.');
+		}
+		if ($this->folderOwner($this->path . $this->choices['folder'], $this->environments[$this->choices['env']]['user'], $this->environments[$this->choices['env']]['user'])) {
+			$this->print(' [OK]', false, 0, true, 'ng');
+		} else {
+			$this->print(' [FAIL]', false, 0, true, 'nr');
+		}
+
+		$this->print('', true, 0);
+		$this->print('', true, 100, true, 'bb');
 		$this->print('Summary of processing -', true, 1, true, 'bb');
 
 		foreach ($this->counts as $k => $v) {
-
 			$this->print(strtoupper($k), true, -4, true, 'b0');
 			foreach ($this->counts[$k] as $kk => $vv) {
-				$this->print(strtoupper($kk), true, -8, true, 'b0');
-				$this->print("\t\t\t". $vv[1], false, 0, true, 'br');
+				$this->print(str_pad(strtoupper($kk), 25), true, -8, true, 'b0');
+				$this->print("\t". $vv[1], false, 0, true, 'br');
 				$this->print(' / ', false, 0);
 				$this->print($vv[0], false, 0, true, 'bg');
 				$this->print(' / ', false, 0);
@@ -392,6 +438,57 @@ class Updater {
 		if ($this->choices['confirm'] != 'Y'){
 			$this->abort('Upgrade canceled by user');
 		}
+	}
+
+	/**	
+	 * 	Remove files
+	 **/
+	public function removeFiles() {
+
+		$this->print('', true, 0);
+		$this->print('Removing files(s) -', true, 1, true, 'bb');
+		$this->print('File: '. $this->path . $this->choices['file'], true, -1, true, 'b0');
+		$this->execute('rm '.$this->path . $this->choices['file']);
+		if (!$this->rexec['code']) {
+			$this->print(' [FAIL]', false, 0, true, 'nr');
+		}
+		$this->print(' [OK]', false, 0, true, 'ng');
+	}
+
+	/**	
+	 * 	Remove Old site
+	 **/
+	public function removeSiteOld() {
+
+		$this->print('', true, 0);
+		$this->print('Removing Old Site(s) -', true, 1, true, 'bb');
+		$this->print('Site: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] .'_old', true, -1, true, 'b0');
+		if ($this->pathCheck($this->environments[$this->choices['env']]['siteFolder'] . '_old', false, false, false)) {
+			if (!$this->folderRemove($this->path . $this->environments[$this->choices['env']]['siteFolder'] .'_old')) {
+				$this->abort('Failed to delete old site');
+			}
+		}
+		$this->print(' [OK]', false, 0, true, 'ng');
+	}
+
+	/**	
+	 * 	Move sites
+	 **/
+	public function moveSites() {
+
+		$this->print('', true, 0);
+		$this->print('Moving Site(s) -', true, 1, true, 'bb');
+		$this->print('Site: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] .' '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] .'_old', true, -1, true, 'b0');
+		if (!$this->folderMove($this->path . $this->environments[$this->choices['env']]['siteFolder'], $this->path . $this->environments[$this->choices['env']]['siteFolder'] .'_old')) {
+			$this->abort('Failed to move site');
+		}
+		$this->print(' [OK]', false, 0, true, 'ng');
+
+		$this->print('Site: '. $this->path . $this->choices['folder'] .' '. $this->path . $this->environments[$this->choices['env']]['siteFolder'], true, -1, true, 'b0');
+		if (!$this->folderMove($this->path . $this->choices['folder'], $this->path . $this->environments[$this->choices['env']]['siteFolder'])) {
+			$this->abort('Failed to move site');
+		}
+		$this->print(' [OK]', false, 0, true, 'ng');
 	}
 
 	/**	
@@ -452,13 +549,17 @@ class Updater {
 		foreach ($this->environments[$this->choices['env']]['createFolders'] as $k => $v) {
 			if ($this->path && $this->choices['folder'] && $v) {
 				$this->print('Creating: '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
-				if (mkdir($this->path . $this->choices['folder'] . $v, 0755, true)) {
-					$this->print(' [OK]', false, 0, true, 'ng');
-					$this->execute('echo > "'. $this->path . $this->choices['folder'] . $v .'/index.html"');
-					$this->counts['create_folders']['create'][0]++;
+				if (!$this->pathCheck($this->choices['folder'] . $v, false, false, false)) {
+					if ($this->folderCreate($this->choices['folder'] . $v)) {
+						$this->print(' [OK]', false, 0, true, 'ng');
+						$this->execute('echo > "'. $this->path . $this->choices['folder'] . $v .'/index.html"');
+						$this->counts['create_folders']['create'][0]++;
+					} else {
+						$this->print(' [FAIL]', false, 0, true, 'nr');
+						$this->counts['create_folders']['create'][1]++;
+					}
 				} else {
-					$this->print(' [FAIL]', false, 0, true, 'nr');
-					$this->counts['create_folders']['create'][1]++;
+					$this->print(' [OK]', false, 0, true, 'ng');
 				}
 			}
 		}
@@ -475,7 +576,7 @@ class Updater {
 		foreach ($this->environments[$this->choices['env']]['removeFolders'] as $k => $v) {
 			if ($this->path && $this->choices['folder'] && $v) {
 				$this->print('Removing: '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
-				$this->execute('rm -Rf "'. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .'"');
+				$this->folderRemove($this->path . $this->choices['folder'] . $v);
 				if ($this->rexec['code']) {
 					$this->print(' [OK]', false, 0, true, 'ng');
 					$this->counts['remove_folders']['remove'][0]++;
@@ -665,11 +766,8 @@ class Updater {
 	 * 	Create Folder
 	 **/
 	private function folderCreate($path, $mask = 0755) {
-		if (!$this->pathCheck($path, true, false, false)) {
-			if (!mkdir($this->path . $path, $mask, true)) {
-				$this->abort('Could not create folder');
-				return false;
-			}
+		if (!mkdir($this->path . $path, $mask, true)) {
+			return false;
 		}
 		return true;
 	}
@@ -677,9 +775,36 @@ class Updater {
 	/**	
 	 * 	Remove Folder
 	 **/
-	private function folderRemove($path, $force = true) {
-		$this->pathCheck($path, true, false, $force);
-		return rmdir($this->path . $path);
+	private function folderRemove($path) {
+		$this->execute('rm -Rf "'. $path .'"');
+		return $this->rexec['code'];
+	}
+
+	/**	
+	 * 	Move folder
+	 **/
+	private function folderMove($ori, $dest) {
+		$this->execute('mv "'. $ori .'" "'. $dest .'"');
+		return $this->rexec['code'];
+	}
+
+	/**	
+	 * 	Permissions Folder
+	 **/
+	private function folderPermission($path, $mask = '0755') {
+		$this->execute('chmod -R '. $mask .' "'. $path .'"');
+		return $this->rexec['code'];
+	}
+
+	/**	
+	 * 	Owner Folder
+	 **/
+	private function folderOwner($path, $user, $group) {
+		if (!$user || !$group) {
+			return false;
+		}
+		$this->execute('chown -R '. $user .':'. $group .' "'. $path .'"');
+		return $this->rexec['code'];
 	}
 
 	/**	
@@ -688,7 +813,6 @@ class Updater {
 	public function folder($path, $func, $extension){
 		
 		$dir = new DirectoryIterator($path);
-		
 		foreach ($dir as $file) {
 		    if (!$file->isDot()) {
 		    	if ($file->isDir()) {
@@ -782,7 +906,7 @@ class Updater {
 			$msg = $this->colors[$color] . $msg . $this->colors['none'];
 		}
 
-		$this->execute('clear');
+		echo $this->execute('clear');
 		echo $this->log['full'] . $msg;
 
 		if ($save) {
@@ -807,14 +931,14 @@ class Updater {
 	 * 	Log
 	 **/
 	private function log() {
-		//file_put_contents('update_'. date('dmYHi') .'.log', $this->log['clean']);
+		file_put_contents('update_'. date('dmYHi') .'.log', $this->log['clean']);
 	}
 
 	/**	
 	 * 	Clear screen
 	 **/
 	private function clear() {
-		echo $this->execute('clear');
+		$this->execute('clear');
 	}
 
 	/**	
