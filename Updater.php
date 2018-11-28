@@ -149,6 +149,7 @@ class Updater {
 					'ignoreFolders' => array(
 						'/cache',
 						'/logs',
+						'/assets/php/mpdf61',
 						'/assets/php/captcha',
 					),
 				), 
@@ -450,7 +451,6 @@ class Updater {
 		$content = $this->removeComments($content);
 		$content = $this->removeSpaces($content);
 		
-		//return $this->putContent($path .'_new', $content);
 		return $this->putContent($path, $content);
 	}
 
@@ -670,9 +670,9 @@ class Updater {
 	 **/
 	private function removeComments($content){
 
-		$content = preg_replace('#[\s\n\t]//.+$#m', ' ', $content);
-			//$content = preg_replace('#//[a-z0-9]+$#m', "", $content);
+		$content = preg_replace('#//[a-z0-9]+$#m', "", $content);
 		$content = preg_replace('![\s\t\n\r]+/\*.*?\*/!s', ' ', $content);
+		$content = preg_replace('#[\s\n\t]//.+$#m', ' ', $content);
 		$content = preg_replace( '![\s\t]//.*?\n!' , ' ', $content ); //
 		$content = preg_replace('/<\!--.*-->/', ' ', $content);
 
@@ -693,7 +693,9 @@ class Updater {
 		$content = preg_replace('/=> /', '=>', $content);
 
 		$content = preg_replace('/<<<EOF/', "<<<EOF\n", $content);
+		$content = preg_replace('/<<<EOT/', "<<<EOT\n", $content);
 		$content = preg_replace('/EOF;/', "\nEOF;", $content);
+		$content = preg_replace('/EOT;/', "\nEOT;", $content);
 		
 		return $content;
 	}
