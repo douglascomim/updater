@@ -340,7 +340,6 @@ class Updater {
 		//	Remove files of installation
 		$this->removeFiles();
 
-		$this->print('', true, 0);
 	}
 
 	/**	
