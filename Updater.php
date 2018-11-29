@@ -185,6 +185,8 @@ class Updater {
 	 **/
 	public function start() {
 
+		echo $this->execute('clear');
+
 		foreach ($this->environments as $k => $v) {
 			$this->envs[] = $k;
 		}
@@ -440,9 +442,9 @@ class Updater {
 		$this->message('Summary of processing -', true, 1, true, 'bb');
 
 		foreach ($this->counts as $k => $v) {
-			$this->message(strtoupper($k), true, -4, true, 'b0');
+			$this->message(strtoupper($k), true, -1, true, 'b0');
 			foreach ($this->counts[$k] as $kk => $vv) {
-				$this->message(str_pad(strtoupper($kk), 25), true, -8, true, 'b0');
+				$this->message(str_pad(strtolower($kk), 25), true, -4, true, 'b0');
 				$this->message("\t". $vv[1], false, 0, true, 'br');
 				$this->message(' / ', false, 0);
 				$this->message($vv[0], false, 0, true, 'bg');
@@ -813,12 +815,14 @@ class Updater {
 				return true;
 			} else {
 				if (in_array($prompt, $valid)){
+					$this->reset();
 					$this->message($msg ."[$prompt]", true, -1);
 					$this->choices[$key] = $prompt;
 					return true;
 				}
 			}
 		}
+		$this->reset();
 		$this->prompt($msg, $valid, $key, $test);
 	}
 
@@ -1006,8 +1010,7 @@ class Updater {
 		}
 		
 		if ($echo) {
-			echo $this->execute('clear');
-			echo $this->log['full'] . $msg;
+			echo $msg;
 		}
 
 		if ($save) {
@@ -1016,6 +1019,14 @@ class Updater {
 				$this->log['full'] .= $msg;
 			}
 		}
+	}
+
+	/**	
+	 * 	Reset
+	 **/
+	private function reset() {
+		echo $this->execute('clear');
+		echo $this->log['full'];
 	}
 
 	/**	
