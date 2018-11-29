@@ -9,6 +9,8 @@
  *	@version 2.1 | 19.11.2018
  **/ 
 
+error_reporting(E_ERROR | E_WARNING | E_PARSE);
+
 include 'vendor/matthiasmullie/minify/src/Minify.php';
 include 'vendor/matthiasmullie/minify/src/JS.php';
 include 'vendor/matthiasmullie/minify/src/CSS.php';
@@ -38,6 +40,9 @@ class Updater {
 
 	//	Log
 	private $log = array('clean' => '', 'full' => '');
+
+	//	Log full
+	private $logfull = true;
 
 	//	Version
 	private $version = '2.0';
@@ -104,7 +109,7 @@ class Updater {
 	private $environments = array(
 		'PROD' => array(
 			'user' => 'douglas',
-			'type' => 'deploy',						// Type of update: [deploy: use master.zip | site: copy source from site]
+			'type' => 'deploy',						// Type of update: [deploy: use master.zip]
 			'maskFolder' => '0755',
 			'siteFolder' => 'producao',
 			'backupFolder' => 'backup',
@@ -124,10 +129,10 @@ class Updater {
 				'/_dev',
 			),
 			'preCommands' => array(
-				//'/etc/init.d/network status',
+				//'/etc/init.d/apache2 stop',
 			),
 			'posCommands' => array(
-				//'sudo /etc/init.d/apache2 start',
+				//'/etc/init.d/apache2 start',
 			),
 			'process' => array(
 				'css' => array(
@@ -195,13 +200,13 @@ class Updater {
 	private function header() {
 		
 		$this->message('', true, 100, true, 'b0');
-		$this->message('', true, 0);
+		$this->message('', true, 0, true, 'n0');
 		
 		$this->qpre = 1;
 		$this->message('Updater Console PHP from Git Sources', true, -1, true, 'b0');
 		$this->message('Version: '. $this->version, true, -1, true, 'b0');
 
-		$this->message('', true, 0);
+		$this->message('', true, 0, true, 'n0');
 		$this->message('', true, 100, true, 'b0');
 	}
 
@@ -217,13 +222,13 @@ class Updater {
 		
 		$this->message('Which environment do you want to upgrade -', true, 1, true, 'bb');
 		$this->prompt('['. implode(' / ', $this->envs) .'] : ', $this->envs, 'env');
-		$this->message('', true, 0);
+		$this->message('', true, 0, true, 'n0');
 		
 		$method = $this->environments[$this->choices['env']]['type'];
 		$this->$method();
 		
 		//	Finish
-		$this->message('', true, 0);
+		$this->message('', true, 0, true, 'n0');
 		$this->message('', true, 100, true, 'bb');
 		$this->message('Finished update process', true, -1, true, 'bb');
 		$this->message('', true, 100, true, 'bb');
@@ -242,10 +247,10 @@ class Updater {
 		$this->message('', true, 100, true, 'bb');
 		$this->message('Update Summary -', true, 1, true, 'bb');
 		$this->message('Site folder: ', true, -1, true, 'b0');
-		$this->message('['. $this->environments[$this->choices['env']]['siteFolder'] .']', true, -4);
-		$this->message('', true, 0);
+		$this->message('['. $this->environments[$this->choices['env']]['siteFolder'] .']', true, -4, true, 'n0');
+		$this->message('', true, 0, true, 'n0', true);
 
-		$this->message('Files that will be kept: ', true, -1, true, 'b0');
+		$this->message('Files that will be kept: ', true, -1, true, 'b0', true);
 		$this->message('['. implode(', ', $this->environments[$this->choices['env']]['persistentFiles']) .']', true, -4);
 		$this->message('', true, 0);
 
@@ -319,9 +324,6 @@ class Updater {
 		//	Backup
 		$this->backup();
 
-		//	Pre-commands
-		$this->preCommands();
-
 		//	Unzip Files
 		$this->message('Decompressing source files -', true, 1, true, 'bb');
 		$this->message('Unzip:', true, -1, true, 'b0');
@@ -344,6 +346,9 @@ class Updater {
 		//	Process files
 		$this->deployProcessFiles();
 
+		//	Pre-commands
+		$this->preCommands();
+
 		//	Remove old site
 		$this->removeSiteOld();
 		
@@ -355,7 +360,6 @@ class Updater {
 
 		//	pos-commands
 		$this->posCommands();
-
 	}
 
 	/**	
@@ -393,7 +397,7 @@ class Updater {
 					continue(1);
 				}
 				foreach ($v['source'] as $kk => $vv) {
-					$this->message($vv, true, -6);
+					$this->message($vv, true, -6, true, 'b0');
 					$this->folder($this->path . $this->choices['folder'] . $vv, $action, $k);
 				}
 			}
@@ -455,12 +459,12 @@ class Updater {
 		}
 		$this->message('', true, 100, true, 'bb');
 	}
-
+	
 	/**	
 	 * 	Remove files
 	 **/
 	private function removeFiles() {
-
+		
 		$this->message('', true, 0);
 		$this->message('Removing files(s) -', true, 1, true, 'bb');
 		$this->message('File: '. $this->path . $this->choices['file'], true, -1, true, 'b0');
@@ -469,6 +473,7 @@ class Updater {
 			$this->message(' [FAIL]', false, 0, true, 'nr');
 		}
 		$this->message(' [OK]', false, 0, true, 'ng');
+		$this->message('', true, 0);
 	}
 
 	/**	
@@ -523,7 +528,7 @@ class Updater {
 					$this->counts['persistent_files']['copy'][0]++;
 				} else {
 					$this->message(' [FAIL]', false, 0, true, 'nr');
-					$this->message($this->rexec['output'][0], true, -2, true, 'nr');
+					$this->message($this->rexec['output'], true, -2, true, 'nr');
 					$this->counts['persistent_files']['copy'][1]++;
 				}
 			}
@@ -547,7 +552,7 @@ class Updater {
 					$this->counts['persistent_folders']['copy'][0]++;
 				} else {
 					$this->message(' [FAIL]', false, 0, true, 'nr');
-					$this->message($this->rexec['output'][0], true, -2, true, 'nr');
+					$this->message($this->rexec['output'], true, -2, true, 'nr');
 					$this->counts['persistent_folders']['copy'][1]++;
 				}
 			}
@@ -608,7 +613,7 @@ class Updater {
 	/**	
 	 * 	Process compress
 	 **/
-	private function compress($path, $filename, $extension) {
+	private function compress($path, $extension) {
 
 		$compress = 'compress' . strtoupper($extension);
 		return $this->$compress($path);
@@ -656,7 +661,7 @@ class Updater {
 	/**	
 	 * 	Check sintax
 	 **/
-	private function syntax($path, $filename, $extension) {
+	private function syntax($path, $extension) {
 		
 		$syntax = 'syntax' . strtoupper($extension);
 		return $this->$syntax($path);
@@ -668,7 +673,7 @@ class Updater {
 	private function syntaxPHP($path) {
 
 		$this->execute("php -l '$path'");
-		if (substr($this->rexec['output'][0], 0, 25) == 'No syntax errors detected') {
+		if (substr($this->rexec['output'], 0, 25) == 'No syntax errors detected') {
 			return true;
 		}
 		return false;
@@ -692,12 +697,12 @@ class Updater {
 			$this->abort('Application "node" not found. Try "apt install node" or "dnf install node"');
 		}
 
-		$this->execute("node --check '$path'");
-		if (trim($this->rexec['output'][0]) == '') {
+		//node index.js 2>&1 | tee --append /tmp/output
+		$this->execute("node -c '$path' 2>&1 | tee --append /tmp/output");
+		if (trim($this->rexec['output']) == '') {
 			return true;
 		}
 		return false;
-		
 	}
 
 	/**	
@@ -740,7 +745,7 @@ class Updater {
 		foreach ($this->environments[$this->choices['env']]['preCommands'] as $k => $v) {
 			$this->message($v, true, -1, true, 'b0');
 			$this->execute($v);
-			$this->message($this->rexec['output'][0], true, 0);
+			$this->message($this->rexec['output'], true, 0);
 		}
 		$this->message('', true, 0);
 	}
@@ -754,7 +759,7 @@ class Updater {
 		foreach ($this->environments[$this->choices['env']]['posCommands'] as $k => $v) {
 			$this->message($v, true, -1, true, 'b0');
 			$this->execute($v);
-			$this->message($this->rexec['output'][0], true, 0);
+			$this->message($this->rexec['output'], true, 0);
 		}
 		$this->message('', true, 0);
 	}
@@ -797,7 +802,7 @@ class Updater {
 	 **/
 	private function prompt($msg, $valid = array(), $key, $test = true) {
 
-		$this->message('', true, -1, false, false);
+		$this->message('', true, -1, false, false, 'n0');
 		
 		$prompt = readline($msg);
 		
@@ -836,8 +841,7 @@ class Updater {
 	 **/
 	private function unzip($path, $dst = null) {
 		$dst = ($dst) ? '-d "'. $dst .'"' : '';
-		//$this->execute('unzip -o "'. $path .'" '. $dst .' > /dev/null 2>&1');
-		$this->execute('unzip -o "'. $path .'" '. $dst);
+		$this->message($this->execute('unzip -o "'. $path .'" '. $dst), true, 0, true, 'n0', $this->logfull);
 	}
 
 	/**	
@@ -918,7 +922,7 @@ class Updater {
 		            		continue(2);
 		            	}
 		            }
-		            $this->message($path, true, -6, true, 'b0');
+		            $this->message($path, true, -6, true, 'b0', $this->logfull);
 		            $this->folder($path, $func, $extension);
 		        }
 		        //	Is a file?
@@ -927,14 +931,15 @@ class Updater {
 		            $fileName = $file->getFilename();
 		            // Is a extension required ?
 		            if (preg_match("/\.$extension$/", $fileName) && !in_array($fileName, $this->environments[$this->choices['env']]['process'][$extension]['ignoreFiles'])) {
-		            	$this->message('File: '. $filePath, true, -8);
-	            		if ($this->$func($filePath, $fileName, $extension)) {
-		            		$this->message(' [OK]', false, 0, true, 'bg');
+		            	$this->message('File: '. $filePath, true, -8, true, 'n0', $this->logfull);
+	            		if ($this->$func($filePath, $extension)) {
+		            		$this->message(' [OK]', false, 0, true, 'ng', $this->logfull);
 			            	$this->counts[$func][$extension][0]++;
-			           	} else {
-			           		$this->message(' [FAIL]', false, 0, true, 'br');
+						} else {
+							$error = ">>>>>>>>>>\n". $this->rexec['output'] ."\n<<<<<<<<<<";
+							$this->message(' [FAIL]', false, 0, true, 'nr', $this->logfull);
+							$this->message($error, true, 0, true, 'nr', $this->logfull);
 							$this->counts[$func][$extension][1]++;
-							exit();
 			           	}
 		            }
 		        }
@@ -980,7 +985,7 @@ class Updater {
 	/**	
 	 * 	Print to screen
 	 **/
-	private function message($msg, $brk = true, $pre = null, $save = true, $color = null) {
+	private function message($msg, $brk = true, $pre = null, $save = true, $color = null, $echo = true) {
 
 		if ($brk) {
 			$pre = ($pre === null) ? $this->qpre : $pre;
@@ -999,13 +1004,17 @@ class Updater {
 			$msgc = $msg; // message clean
 			$msg = $this->colors[$color] . $msg . $this->colors['none'];
 		}
-
-		echo $this->execute('clear');
-		echo $this->log['full'] . $msg;
+		
+		if ($echo) {
+			echo $this->execute('clear');
+			echo $this->log['full'] . $msg;
+		}
 
 		if ($save) {
 			$this->log['clean'] .= $msgc;
-			$this->log['full'] .= $msg;
+			if ($echo) {
+				$this->log['full'] .= $msg;
+			}
 		}
 	}
 
@@ -1014,25 +1023,18 @@ class Updater {
 	 **/
 	private function execute($command) {
 
-		$return = exec($command, $output, $code);
-		$this->rexec['output'] = $output;
+		exec($command, $output, $code);
+		$this->rexec['output'] = implode("\n", $output);
 		$this->rexec['code'] = !$code;
 
-		return $return;
+		return $this->rexec['output'];
 	}
 
 	/**	
 	 * 	Log
 	 **/
 	private function log() {
-		file_put_contents('update_'. date('dmYHi') .'.log', $this->log['clean']);
-	}
-
-	/**	
-	 * 	Clear screen
-	 **/
-	private function clear() {
-		$this->execute('clear');
+		file_put_contents('update_'. $this->choices['folder'] .'_'. date('dmY_Hi') .'.log', $this->log['clean']);
 	}
 
 	/**	
@@ -1042,6 +1044,8 @@ class Updater {
 		$this->message('', true, 100, true, 'br'); 
 		$this->message($msg .' ---', true, 3, true, 'br');
 		$this->message('', true, 100, true, 'br'); 
+
+		$this->log();
 		exit();
 	}
 }
