@@ -194,15 +194,15 @@ class Updater {
 	 **/
 	private function header() {
 		
-		$this->print('', true, 100, true, 'b0');
-		$this->print('', true, 0);
+		$this->message('', true, 100, true, 'b0');
+		$this->message('', true, 0);
 		
 		$this->qpre = 1;
-		$this->print('Updater Console PHP from Git Sources', true, -1, true, 'b0');
-		$this->print('Version: '. $this->version, true, -1, true, 'b0');
+		$this->message('Updater Console PHP from Git Sources', true, -1, true, 'b0');
+		$this->message('Version: '. $this->version, true, -1, true, 'b0');
 
-		$this->print('', true, 0);
-		$this->print('', true, 100, true, 'b0');
+		$this->message('', true, 0);
+		$this->message('', true, 100, true, 'b0');
 	}
 
 	/**	
@@ -211,22 +211,22 @@ class Updater {
 	private function body() {
 		$this->qpre = 2; 
 		
-		$this->print('', true, 100, true, 'bb');
-		$this->print('Gathering Information for Upgrade', true, 0, true, 'bb');
-		$this->print('', true, 100, true, 'bb');
+		$this->message('', true, 100, true, 'bb');
+		$this->message('Gathering Information for Upgrade', true, 0, true, 'bb');
+		$this->message('', true, 100, true, 'bb');
 		
-		$this->print('Which environment do you want to upgrade -', true, 1, true, 'bb');
+		$this->message('Which environment do you want to upgrade -', true, 1, true, 'bb');
 		$this->prompt('['. implode(' / ', $this->envs) .'] : ', $this->envs, 'env');
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 		
 		$method = $this->environments[$this->choices['env']]['type'];
 		$this->$method();
 		
 		//	Finish
-		$this->print('', true, 0);
-		$this->print('', true, 100, true, 'bb');
-		$this->print('Finished update process', true, -1, true, 'bb');
-		$this->print('', true, 100, true, 'bb');
+		$this->message('', true, 0);
+		$this->message('', true, 100, true, 'bb');
+		$this->message('Finished update process', true, -1, true, 'bb');
+		$this->message('', true, 100, true, 'bb');
 	}
 
 	/**	
@@ -234,84 +234,84 @@ class Updater {
 	 **/
 	private function deploy() {
 		
-		$this->print('Archive for deploy -', true, 1, true, 'bb');
+		$this->message('Archive for deploy -', true, 1, true, 'bb');
 		$this->prompt('', array(), 'file', false);
 		$this->choices['folder'] = substr($this->choices['file'], 0, -4);
 		
 		//	Summary
-		$this->print('', true, 100, true, 'bb');
-		$this->print('Update Summary -', true, 1, true, 'bb');
-		$this->print('Site folder: ', true, -1, true, 'b0');
-		$this->print('['. $this->environments[$this->choices['env']]['siteFolder'] .']', true, -4);
-		$this->print('', true, 0);
+		$this->message('', true, 100, true, 'bb');
+		$this->message('Update Summary -', true, 1, true, 'bb');
+		$this->message('Site folder: ', true, -1, true, 'b0');
+		$this->message('['. $this->environments[$this->choices['env']]['siteFolder'] .']', true, -4);
+		$this->message('', true, 0);
 
-		$this->print('Files that will be kept: ', true, -1, true, 'b0');
-		$this->print('['. implode(', ', $this->environments[$this->choices['env']]['persistentFiles']) .']', true, -4);
-		$this->print('', true, 0);
+		$this->message('Files that will be kept: ', true, -1, true, 'b0');
+		$this->message('['. implode(', ', $this->environments[$this->choices['env']]['persistentFiles']) .']', true, -4);
+		$this->message('', true, 0);
 
-		$this->print('Folders that will be kept: ', true, -1, true, 'b0');
-		$this->print('['. implode(', ', $this->environments[$this->choices['env']]['persistentFolders']) .']', true, -4);
-		$this->print('', true, 0);
+		$this->message('Folders that will be kept: ', true, -1, true, 'b0');
+		$this->message('['. implode(', ', $this->environments[$this->choices['env']]['persistentFolders']) .']', true, -4);
+		$this->message('', true, 0);
 		
-		$this->print('Folders to be created: ', true, -1, true, 'b0');
-		$this->print('['. implode(', ', $this->environments[$this->choices['env']]['createFolders']) .']', true, -4);
-		$this->print('', true, 0);
+		$this->message('Folders to be created: ', true, -1, true, 'b0');
+		$this->message('['. implode(', ', $this->environments[$this->choices['env']]['createFolders']) .']', true, -4);
+		$this->message('', true, 0);
 
-		$this->print('Folders to be removed: ', true, -1, true, 'b0');
-		$this->print('['. implode(', ', $this->environments[$this->choices['env']]['removeFolders']) .']', true, -4);
-		$this->print('', true, 0);
+		$this->message('Folders to be removed: ', true, -1, true, 'b0');
+		$this->message('['. implode(', ', $this->environments[$this->choices['env']]['removeFolders']) .']', true, -4);
+		$this->message('', true, 0);
 		
-		$this->print('Pre-upgrade commands: ', true, -1, true, 'b0');
-		$this->print('['. implode(', ', $this->environments[$this->choices['env']]['preCommands']) .']', true, -4);
-		$this->print('', true, 0);
+		$this->message('Pre-upgrade commands: ', true, -1, true, 'b0');
+		$this->message('['. implode(', ', $this->environments[$this->choices['env']]['preCommands']) .']', true, -4);
+		$this->message('', true, 0);
 		
-		$this->print('Pos-upgrade commands: ', true, -1, true, 'b0');
-		$this->print('['. implode(', ', $this->environments[$this->choices['env']]['posCommands']) .']', true, -4);
-		$this->print('', true, 0);
+		$this->message('Pos-upgrade commands: ', true, -1, true, 'b0');
+		$this->message('['. implode(', ', $this->environments[$this->choices['env']]['posCommands']) .']', true, -4);
+		$this->message('', true, 0);
 		
-		$this->print('Files to be processed: ', true, -1, true, 'b0');
+		$this->message('Files to be processed: ', true, -1, true, 'b0');
 		if ($this->environments[$this->choices['env']]['process']['css']['enable']) {
-			$this->print("CSS", true, -4);
-			$this->print("Sources: [". implode(', ', $this->environments[$this->choices['env']]['process']['css']['source']) .']', true, -7);
-			$this->print("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['process']['css']['ignoreFiles']) .']', true, -7);
-			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['process']['css']['ignoreFolders']) .']', true, -7);
+			$this->message("CSS", true, -4);
+			$this->message("Sources: [". implode(', ', $this->environments[$this->choices['env']]['process']['css']['source']) .']', true, -7);
+			$this->message("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['process']['css']['ignoreFiles']) .']', true, -7);
+			$this->message("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['process']['css']['ignoreFolders']) .']', true, -7);
 		}
 		
 		if ($this->environments[$this->choices['env']]['process']['js']['enable']) {
-			$this->print("JS", true, -4);
-			$this->print("Sources: [". implode(', ', $this->environments[$this->choices['env']]['process']['js']['source']) .']', true, -7);
-			$this->print("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['process']['js']['ignoreFiles']) .']', true, -7);
-			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['process']['js']['ignoreFolders']) .']', true, -7);
+			$this->message("JS", true, -4);
+			$this->message("Sources: [". implode(', ', $this->environments[$this->choices['env']]['process']['js']['source']) .']', true, -7);
+			$this->message("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['process']['js']['ignoreFiles']) .']', true, -7);
+			$this->message("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['process']['js']['ignoreFolders']) .']', true, -7);
 		}
 
 		if ($this->environments[$this->choices['env']]['process']['html']['enable']) {
-			$this->print("HTML", true, -4);
-			$this->print("Sources: [". implode(', ', $this->environments[$this->choices['env']]['process']['html']['source']) .']', true, -7);
-			$this->print("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['process']['html']['ignoreFiles']) .']', true, -7);
-			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['process']['html']['ignoreFolders']) .']', true, -7);
+			$this->message("HTML", true, -4);
+			$this->message("Sources: [". implode(', ', $this->environments[$this->choices['env']]['process']['html']['source']) .']', true, -7);
+			$this->message("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['process']['html']['ignoreFiles']) .']', true, -7);
+			$this->message("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['process']['html']['ignoreFolders']) .']', true, -7);
 		}
 
 		if ($this->environments[$this->choices['env']]['process']['php']['enable']) {
-			$this->print("PHP", true, -4);
-			$this->print("Sources: [". implode(', ', $this->environments[$this->choices['env']]['process']['php']['source']) .']', true, -7);
-			$this->print("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['process']['php']['ignoreFiles']) .']', true, -7);
-			$this->print("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['process']['php']['ignoreFolders']) .']', true, -7);
+			$this->message("PHP", true, -4);
+			$this->message("Sources: [". implode(', ', $this->environments[$this->choices['env']]['process']['php']['source']) .']', true, -7);
+			$this->message("Ignored files: [". implode(', ', $this->environments[$this->choices['env']]['process']['php']['ignoreFiles']) .']', true, -7);
+			$this->message("Ignored folders: [". implode(', ', $this->environments[$this->choices['env']]['process']['php']['ignoreFolders']) .']', true, -7);
 		}
 		
-		$this->print('', true, 100, true, 'bb');
+		$this->message('', true, 100, true, 'bb');
 
-		$this->print('Do you want to proceed with the update? -', true, 1, true, 'bb');
+		$this->message('Do you want to proceed with the update? -', true, 1, true, 'bb');
 		$this->prompt('[Y/N] : ', array('Y','N'), 'confirm');
 		
 		if ($this->choices['confirm'] != 'Y'){
 			$this->abort('Upgrade canceled by user');
 		}
 		
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 
-		$this->print('', true, 100, true, 'bb');
-		$this->print('Starting update process ...', true, 0, true, 'bb');
-		$this->print('', true, 100, true, 'bb');
+		$this->message('', true, 100, true, 'bb');
+		$this->message('Starting update process ...', true, 0, true, 'bb');
+		$this->message('', true, 100, true, 'bb');
 
 		//	Verifing files/folders
 		$this->deployCheckFiles();
@@ -323,11 +323,11 @@ class Updater {
 		$this->preCommands();
 
 		//	Unzip Files
-		$this->print('Decompressing source files -', true, 1, true, 'bb');
-		$this->print('Unzip:', true, -1, true, 'b0');
-		$this->print($this->path . $this->choices['file'] .' -> '. $this->path, true, -4);
+		$this->message('Decompressing source files -', true, 1, true, 'bb');
+		$this->message('Unzip:', true, -1, true, 'b0');
+		$this->message($this->path . $this->choices['file'] .' -> '. $this->path, true, -4);
 		$this->unzip($this->path . $this->choices['file'], $this->path);
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 		
 		//	Replace persistent files
 		$this->replacePersistentFiles();
@@ -363,97 +363,97 @@ class Updater {
 	**/
 	private function deployProcessFiles() {
 		
-		$this->print('Processing files -', true, 1, true, 'bb');
-		$this->print('Compressing: ', true, -1, true, 'b0');
+		$this->message('Processing files -', true, 1, true, 'bb');
+		$this->message('Compressing: ', true, -1, true, 'b0');
 		
 		$action = 'compress';
 		foreach ($this->environments[$this->choices['env']]['process'] as $k => $v) {
 			if ($v['enable']) {
-				$this->print(strtoupper($k), true, -4, true, 'b0');
+				$this->message(strtoupper($k), true, -4, true, 'b0');
 				if (!in_array($action, $this->environments[$this->choices['env']]['process'][$k]['process'])) {
-					$this->print("Process '$action' not enabled", true, -8, true, 'b0');
+					$this->message("Process '$action' not enabled", true, -8, true, 'b0');
 					continue(1);
 				}
 				foreach ($v['source'] as $kk => $vv) {
-					$this->print($vv, true, -6, true, 'b0');
+					$this->message($vv, true, -6, true, 'b0');
 					$this->folder($this->path . $this->choices['folder'] . $vv, $action, $k);
 				}
 			}
 		}
 
-		$this->print('', true, 0);
-		$this->print('Testing syntax: ', true, -1, true, 'b0');
+		$this->message('', true, 0);
+		$this->message('Testing syntax: ', true, -1, true, 'b0');
 		
 		$action = 'syntax';
 		foreach ($this->environments[$this->choices['env']]['process'] as $k => $v) {
 			if ($v['enable']) {
-				$this->print(strtoupper($k), true, -4, true, 'b0');
+				$this->message(strtoupper($k), true, -4, true, 'b0');
 				if (!in_array($action, $this->environments[$this->choices['env']]['process'][$k]['process'])) {
-					$this->print("Process '$action' not enabled", true, -8, true, 'b0');
+					$this->message("Process '$action' not enabled", true, -8, true, 'b0');
 					continue(1);
 				}
 				foreach ($v['source'] as $kk => $vv) {
-					$this->print($vv, true, -6);
+					$this->message($vv, true, -6);
 					$this->folder($this->path . $this->choices['folder'] . $vv, $action, $k);
 				}
 			}
 		}
 
-		$this->print('', true, 0);
-		$this->print('Changing Permissions -', true, 1, true, 'bb');
-		$this->print('Folder:', true, -1, true, 'b0');
-		$this->print('Permissions: '. $this->environments[$this->choices['env']]['maskFolder'], true, -4, true, 'n0');
-		$this->print('Changing: '. $this->path . $this->choices['folder'], true, -4, true, 'n0');
+		$this->message('', true, 0);
+		$this->message('Changing Permissions -', true, 1, true, 'bb');
+		$this->message('Folder:', true, -1, true, 'b0');
+		$this->message('Permissions: '. $this->environments[$this->choices['env']]['maskFolder'], true, -4, true, 'n0');
+		$this->message('Changing: '. $this->path . $this->choices['folder'], true, -4, true, 'n0');
 		
 		if (!$this->pathCheck($this->choices['folder'], false, false, false)) {
-			$this->print(' [FAIL]', false, 0, true, 'nr');
+			$this->message(' [FAIL]', false, 0, true, 'nr');
 			$this->abort('Folder not found.');
 		}
 		if ($this->folderPermission($this->path . $this->choices['folder'], $this->environments[$this->choices['env']]['maskFolder'])) {
-			$this->print(' [OK]', false, 0, true, 'ng');
+			$this->message(' [OK]', false, 0, true, 'ng');
 		} else {
-			$this->print(' [FAIL]', false, 0, true, 'nr');
+			$this->message(' [FAIL]', false, 0, true, 'nr');
 		}
 		
-		$this->print('', true, 0);
-		$this->print('Changing Owner -', true, 1, true, 'bb');
-		$this->print('Folder:', true, -1, true, 'b0');
-		$this->print('Owner: '. $this->environments[$this->choices['env']]['user'] .':'. $this->environments[$this->choices['env']]['user'], true, -4, true, 'n0');
-		$this->print('Changing: '. $this->path . $this->choices['folder'], true, -4, true, 'n0');
+		$this->message('', true, 0);
+		$this->message('Changing Owner -', true, 1, true, 'bb');
+		$this->message('Folder:', true, -1, true, 'b0');
+		$this->message('Owner: '. $this->environments[$this->choices['env']]['user'] .':'. $this->environments[$this->choices['env']]['user'], true, -4, true, 'n0');
+		$this->message('Changing: '. $this->path . $this->choices['folder'], true, -4, true, 'n0');
 		
 		if (!$this->pathCheck($this->choices['folder'], false, false, false)) {
-			$this->print(' [FAIL]', false, 0, true, 'nr');
+			$this->message(' [FAIL]', false, 0, true, 'nr');
 			$this->abort('Folder not found.');
 		}
 		if ($this->folderOwner($this->path . $this->choices['folder'], $this->environments[$this->choices['env']]['user'], $this->environments[$this->choices['env']]['user'])) {
-			$this->print(' [OK]', false, 0, true, 'ng');
+			$this->message(' [OK]', false, 0, true, 'ng');
 		} else {
-			$this->print(' [FAIL]', false, 0, true, 'nr');
+			$this->message(' [FAIL]', false, 0, true, 'nr');
 		}
 
-		$this->print('', true, 0);
-		$this->print('', true, 100, true, 'bb');
-		$this->print('Summary of processing -', true, 1, true, 'bb');
+		$this->message('', true, 0);
+		$this->message('', true, 100, true, 'bb');
+		$this->message('Summary of processing -', true, 1, true, 'bb');
 
 		foreach ($this->counts as $k => $v) {
-			$this->print(strtoupper($k), true, -4, true, 'b0');
+			$this->message(strtoupper($k), true, -4, true, 'b0');
 			foreach ($this->counts[$k] as $kk => $vv) {
-				$this->print(str_pad(strtoupper($kk), 25), true, -8, true, 'b0');
-				$this->print("\t". $vv[1], false, 0, true, 'br');
-				$this->print(' / ', false, 0);
-				$this->print($vv[0], false, 0, true, 'bg');
-				$this->print(' / ', false, 0);
-				$this->print(($vv[0] + $vv[1]), false, 0, true, 'b0');
+				$this->message(str_pad(strtoupper($kk), 25), true, -8, true, 'b0');
+				$this->message("\t". $vv[1], false, 0, true, 'br');
+				$this->message(' / ', false, 0);
+				$this->message($vv[0], false, 0, true, 'bg');
+				$this->message(' / ', false, 0);
+				$this->message(($vv[0] + $vv[1]), false, 0, true, 'b0');
 			}
 		}
 
-		$this->print('', true, 100, true, 'bb');
-		$this->print('Do you want to continue the update? -', true, 1, true, 'bb');
+		$this->message('', true, 100, true, 'bb');
+		$this->message('Do you want to continue the update? -', true, 1, true, 'bb');
 		$this->prompt('[Y/N] : ', array('Y','N'), 'confirm');
 		if ($this->choices['confirm'] != 'Y'){
 			$this->abort('Upgrade canceled by user');
 		}
-		$this->print('', true, 100, true, 'bb');
+		$this->message('', true, 100, true, 'bb');
 	}
 
 	/**	
@@ -461,14 +461,14 @@ class Updater {
 	 **/
 	private function removeFiles() {
 
-		$this->print('', true, 0);
-		$this->print('Removing files(s) -', true, 1, true, 'bb');
-		$this->print('File: '. $this->path . $this->choices['file'], true, -1, true, 'b0');
+		$this->message('', true, 0);
+		$this->message('Removing files(s) -', true, 1, true, 'bb');
+		$this->message('File: '. $this->path . $this->choices['file'], true, -1, true, 'b0');
 		$this->execute('rm '.$this->path . $this->choices['file']);
 		if (!$this->rexec['code']) {
-			$this->print(' [FAIL]', false, 0, true, 'nr');
+			$this->message(' [FAIL]', false, 0, true, 'nr');
 		}
-		$this->print(' [OK]', false, 0, true, 'ng');
+		$this->message(' [OK]', false, 0, true, 'ng');
 	}
 
 	/**	
@@ -476,15 +476,15 @@ class Updater {
 	 **/
 	private function removeSiteOld() {
 
-		$this->print('', true, 0);
-		$this->print('Removing Old Site(s) -', true, 1, true, 'bb');
-		$this->print('Site: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] .'_old', true, -1, true, 'b0');
+		$this->message('', true, 0);
+		$this->message('Removing Old Site(s) -', true, 1, true, 'bb');
+		$this->message('Site: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] .'_old', true, -1, true, 'b0');
 		if ($this->pathCheck($this->environments[$this->choices['env']]['siteFolder'] . '_old', false, false, false)) {
 			if (!$this->folderRemove($this->path . $this->environments[$this->choices['env']]['siteFolder'] .'_old')) {
 				$this->abort('Failed to delete old site');
 			}
 		}
-		$this->print(' [OK]', false, 0, true, 'ng');
+		$this->message(' [OK]', false, 0, true, 'ng');
 	}
 
 	/**	
@@ -492,19 +492,19 @@ class Updater {
 	 **/
 	private function moveSites() {
 
-		$this->print('', true, 0);
-		$this->print('Moving Site(s) -', true, 1, true, 'bb');
-		$this->print('Site: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] .' '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] .'_old', true, -1, true, 'b0');
+		$this->message('', true, 0);
+		$this->message('Moving Site(s) -', true, 1, true, 'bb');
+		$this->message('Site: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] .' '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] .'_old', true, -1, true, 'b0');
 		if (!$this->folderMove($this->path . $this->environments[$this->choices['env']]['siteFolder'], $this->path . $this->environments[$this->choices['env']]['siteFolder'] .'_old')) {
 			$this->abort('Failed to move site');
 		}
-		$this->print(' [OK]', false, 0, true, 'ng');
+		$this->message(' [OK]', false, 0, true, 'ng');
 
-		$this->print('Site: '. $this->path . $this->choices['folder'] .' '. $this->path . $this->environments[$this->choices['env']]['siteFolder'], true, -1, true, 'b0');
+		$this->message('Site: '. $this->path . $this->choices['folder'] .' '. $this->path . $this->environments[$this->choices['env']]['siteFolder'], true, -1, true, 'b0');
 		if (!$this->folderMove($this->path . $this->choices['folder'], $this->path . $this->environments[$this->choices['env']]['siteFolder'])) {
 			$this->abort('Failed to move site');
 		}
-		$this->print(' [OK]', false, 0, true, 'ng');
+		$this->message(' [OK]', false, 0, true, 'ng');
 	}
 
 	/**	
@@ -512,23 +512,23 @@ class Updater {
 	 **/
 	private function replacePersistentFiles() {
 		
-		$this->print('Persistent File(s) -', true, 1, true, 'bb');
-		$this->print('Copying Files:', true, -1, true, 'b0');
+		$this->message('Persistent File(s) -', true, 1, true, 'bb');
+		$this->message('Copying Files:', true, -1, true, 'b0');
 		foreach ($this->environments[$this->choices['env']]['persistentFiles'] as $k => $v) {
 			if ($this->path && $this->environments[$this->choices['env']]['siteFolder'] && $v) {
-				$this->print('Copying: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .' '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
+				$this->message('Copying: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .' '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
 				$this->execute('cp -fp "'. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .'" "'. $this->path . $this->choices['folder'] . $v .'"');
 				if ($this->rexec['code']) {
-					$this->print(' [OK]', false, 0, true, 'ng');
+					$this->message(' [OK]', false, 0, true, 'ng');
 					$this->counts['persistent_files']['copy'][0]++;
 				} else {
-					$this->print(' [FAIL]', false, 0, true, 'nr');
-					$this->print($this->rexec['output'][0], true, -2, true, 'nr');
+					$this->message(' [FAIL]', false, 0, true, 'nr');
+					$this->message($this->rexec['output'][0], true, -2, true, 'nr');
 					$this->counts['persistent_files']['copy'][1]++;
 				}
 			}
 		}
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 	}
 
 	/**	
@@ -536,23 +536,23 @@ class Updater {
 	 **/
 	private function replacePersistentFolders() {
 		
-		$this->print('Persistent Folder(s) -', true, 1, true, 'bb');
-		$this->print('Copying Folders:', true, -1, true, 'b0');
+		$this->message('Persistent Folder(s) -', true, 1, true, 'bb');
+		$this->message('Copying Folders:', true, -1, true, 'b0');
 		foreach ($this->environments[$this->choices['env']]['persistentFolders'] as $k => $v) {
 			if ($this->path && $this->environments[$this->choices['env']]['siteFolder'] && $v) {
-				$this->print('Copying: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .' '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
+				$this->message('Copying: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .' '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
 				$this->execute('cp -Rfp "'. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .'" "'. $this->path . $this->choices['folder'] .'"');
 				if ($this->rexec['code']) {
-					$this->print(' [OK]', false, 0, true, 'ng');
+					$this->message(' [OK]', false, 0, true, 'ng');
 					$this->counts['persistent_folders']['copy'][0]++;
 				} else {
-					$this->print(' [FAIL]', false, 0, true, 'nr');
-					$this->print($this->rexec['output'][0], true, -2, true, 'nr');
+					$this->message(' [FAIL]', false, 0, true, 'nr');
+					$this->message($this->rexec['output'][0], true, -2, true, 'nr');
 					$this->counts['persistent_folders']['copy'][1]++;
 				}
 			}
 		}
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 	}
 
 	/**	
@@ -560,26 +560,26 @@ class Updater {
 	 **/
 	private function createFolders() {
 		
-		$this->print('Creating Folder(s) -', true, 1, true, 'bb');
-		$this->print('Folder(s):', true, -1, true, 'b0');
+		$this->message('Creating Folder(s) -', true, 1, true, 'bb');
+		$this->message('Folder(s):', true, -1, true, 'b0');
 		foreach ($this->environments[$this->choices['env']]['createFolders'] as $k => $v) {
 			if ($this->path && $this->choices['folder'] && $v) {
-				$this->print('Creating: '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
+				$this->message('Creating: '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
 				if (!$this->pathCheck($this->choices['folder'] . $v, false, false, false)) {
 					if ($this->folderCreate($this->choices['folder'] . $v)) {
-						$this->print(' [OK]', false, 0, true, 'ng');
+						$this->message(' [OK]', false, 0, true, 'ng');
 						$this->execute('echo > "'. $this->path . $this->choices['folder'] . $v .'/index.html"');
 						$this->counts['create_folders']['create'][0]++;
 					} else {
-						$this->print(' [FAIL]', false, 0, true, 'nr');
+						$this->message(' [FAIL]', false, 0, true, 'nr');
 						$this->counts['create_folders']['create'][1]++;
 					}
 				} else {
-					$this->print(' [OK]', false, 0, true, 'ng');
+					$this->message(' [OK]', false, 0, true, 'ng');
 				}
 			}
 		}
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 	}
 
 	/**	
@@ -587,22 +587,22 @@ class Updater {
 	 **/
 	private function removeFolders() {
 		
-		$this->print('Removing Folder(s) -', true, 1, true, 'bb');
-		$this->print('Folder(s):', true, -1, true, 'b0');
+		$this->message('Removing Folder(s) -', true, 1, true, 'bb');
+		$this->message('Folder(s):', true, -1, true, 'b0');
 		foreach ($this->environments[$this->choices['env']]['removeFolders'] as $k => $v) {
 			if ($this->path && $this->choices['folder'] && $v) {
-				$this->print('Removing: '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
+				$this->message('Removing: '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
 				$this->folderRemove($this->path . $this->choices['folder'] . $v);
 				if ($this->rexec['code']) {
-					$this->print(' [OK]', false, 0, true, 'ng');
+					$this->message(' [OK]', false, 0, true, 'ng');
 					$this->counts['remove_folders']['remove'][0]++;
 				} else {
-					$this->print(' [FAIL]', false, 0, true, 'nr');
+					$this->message(' [FAIL]', false, 0, true, 'nr');
 					$this->counts['remove_folders']['remove'][1]++;
 				}
 			}
 		}
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 	}
 
 	/**	
@@ -707,28 +707,28 @@ class Updater {
 
 		$this->qpre = 4;
 
-		$this->print('Checking files/folders important for updating -', true, 1, true, 'bb');
+		$this->message('Checking files/folders important for updating -', true, 1, true, 'bb');
 
-		$this->print('Folder(s) site: ', true, -1, true, 'b0');
+		$this->message('Folder(s) site: ', true, -1, true, 'b0');
 		$this->pathCheck($this->environments[$this->choices['env']]['siteFolder']);
 		$this->pathCheck($this->environments[$this->choices['env']]['siteFolder'] . '_old');
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 		
-		$this->print('Persistent file(s): ', true, -1, true, 'b0');
+		$this->message('Persistent file(s): ', true, -1, true, 'b0');
 		foreach ($this->environments[$this->choices['env']]['persistentFiles'] as $k => $v) {
 			$this->pathCheck($this->environments[$this->choices['env']]['siteFolder'] . $v);
 		}
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 		
-		$this->print('Persistent folder(s): ', true, -1, true, 'b0');
+		$this->message('Persistent folder(s): ', true, -1, true, 'b0');
 		foreach ($this->environments[$this->choices['env']]['persistentFolders'] as $k => $v) {
 			$this->pathCheck($this->environments[$this->choices['env']]['siteFolder'] . $v);
 		}
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 
-		$this->print('File to deploy: ', true, -1, true, 'b0');
+		$this->message('File to deploy: ', true, -1, true, 'b0');
 		$this->pathCheck($this->choices['file']);
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 	}
 
 	/**	
@@ -736,13 +736,13 @@ class Updater {
 	 **/
 	private function preCommands() {
 
-		$this->print('Running pre-commands -', true, 1, true, 'bb');
+		$this->message('Running pre-commands -', true, 1, true, 'bb');
 		foreach ($this->environments[$this->choices['env']]['preCommands'] as $k => $v) {
-			$this->print($v, true, -1, true, 'b0');
+			$this->message($v, true, -1, true, 'b0');
 			$this->execute($v);
-			$this->print($this->rexec['output'][0], true, 0);
+			$this->message($this->rexec['output'][0], true, 0);
 		}
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 	}
 
 	/**	
@@ -750,13 +750,13 @@ class Updater {
 	 **/
 	private function posCommands() {
 
-		$this->print('Running pos-commands -', true, 1, true, 'bb');
+		$this->message('Running pos-commands -', true, 1, true, 'bb');
 		foreach ($this->environments[$this->choices['env']]['posCommands'] as $k => $v) {
-			$this->print($v, true, -1, true, 'b0');
+			$this->message($v, true, -1, true, 'b0');
 			$this->execute($v);
-			$this->print($this->rexec['output'][0], true, 0);
+			$this->message($this->rexec['output'][0], true, 0);
 		}
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 	}
 
 	/**	
@@ -766,21 +766,21 @@ class Updater {
 
 		$date = date('dmY_His');
 
-		$this->print('Backing up the "'. $this->choices['env'] .'" site -', true, 1, true, 'bb');
+		$this->message('Backing up the "'. $this->choices['env'] .'" site -', true, 1, true, 'bb');
 
 		$sourceFolder = $this->environments[$this->choices['env']]['siteFolder'];
 		$destinyFolder = $this->environments[$this->choices['env']]['backupFolder'] .'/'. $this->environments[$this->choices['env']]['siteFolder'] .'_'. $date;
 
-		$this->print('Checking... ', true, -1, true, 'b0');
+		$this->message('Checking... ', true, -1, true, 'b0');
 		
 		if (!$this->folderCreate($destinyFolder)) {
 			$this->abort('Could not create backup: '. $this->path . $destinyFolder);
 		}
-		$this->print('', true, 0);
+		$this->message('', true, 0);
 
-		$this->print('Copying... ', true, -1, true, 'b0');
-		$this->print('Source: '. $this->path . $sourceFolder, true, -4);
-		$this->print('Destiny: '. $this->path . $destinyFolder, true, -4);
+		$this->message('Copying... ', true, -1, true, 'b0');
+		$this->message('Source: '. $this->path . $sourceFolder, true, -4);
+		$this->message('Destiny: '. $this->path . $destinyFolder, true, -4);
 		
 		$this->execute('cp -rf "'. $this->path . $sourceFolder .'" "'. $this->path . $destinyFolder .'"');
 
@@ -788,8 +788,8 @@ class Updater {
 			$this->abort('Could not create backup: '. $this->path . $destinyFolder);
 		}
 		
-		$this->print('Backup completed successfully', true, -4, true, 'ng');
-		$this->print('', true, 0);
+		$this->message('Backup completed successfully', true, -4, true, 'ng');
+		$this->message('', true, 0);
 	}
 
 	/**	
@@ -797,18 +797,18 @@ class Updater {
 	 **/
 	private function prompt($msg, $valid = array(), $key, $test = true) {
 
-		$this->print('', true, -1, false, false);
+		$this->message('', true, -1, false, false);
 		
 		$prompt = readline($msg);
 		
 		if ($prompt != '') {
 			if (!$test) {
-				$this->print($msg ."[$prompt]", true, -1);
+				$this->message($msg ."[$prompt]", true, -1);
 				$this->choices[$key] = $prompt;
 				return true;
 			} else {
 				if (in_array($prompt, $valid)){
-					$this->print($msg ."[$prompt]", true, -1);
+					$this->message($msg ."[$prompt]", true, -1);
 					$this->choices[$key] = $prompt;
 					return true;
 				}
@@ -847,14 +847,14 @@ class Updater {
 		
 		$pathFull = $this->path . $path;
 
-		($info) ? $this->print("Checking path: '$pathFull' ", true, ($this->qpre * -1)) : null;
+		($info) ? $this->message("Checking path: '$pathFull' ", true, ($this->qpre * -1)) : null;
 		if (!file_exists($pathFull)) {
-			($info) ? $this->print('[FAIL] [Path not found]', false, null, true, 'br') : null;
-			($label) ? $this->print($label) : null;
+			($info) ? $this->message('[FAIL] [Path not found]', false, null, true, 'br') : null;
+			($label) ? $this->message($label) : null;
 			($die) ? $this->abort() : null;
 			return false;
 		}
-		($info) ? $this->print('[OK]', false, null, true, 'bg') : null;
+		($info) ? $this->message('[OK]', false, null, true, 'bg') : null;
 		return true;
 	}
 
@@ -918,7 +918,7 @@ class Updater {
 		            		continue(2);
 		            	}
 		            }
-		            $this->print($path, true, -6, true, 'b0');
+		            $this->message($path, true, -6, true, 'b0');
 		            $this->folder($path, $func, $extension);
 		        }
 		        //	Is a file?
@@ -927,12 +927,12 @@ class Updater {
 		            $fileName = $file->getFilename();
 		            // Is a extension required ?
 		            if (preg_match("/\.$extension$/", $fileName) && !in_array($fileName, $this->environments[$this->choices['env']]['process'][$extension]['ignoreFiles'])) {
-		            	$this->print('File: '. $filePath, true, -8);
+		            	$this->message('File: '. $filePath, true, -8);
 	            		if ($this->$func($filePath, $fileName, $extension)) {
-		            		$this->print(' [OK]', false, 0, true, 'bg');
+		            		$this->message(' [OK]', false, 0, true, 'bg');
 			            	$this->counts[$func][$extension][0]++;
 			           	} else {
-			           		$this->print(' [FAIL]', false, 0, true, 'br');
+			           		$this->message(' [FAIL]', false, 0, true, 'br');
 							$this->counts[$func][$extension][1]++;
 							exit();
 			           	}
@@ -980,7 +980,7 @@ class Updater {
 	/**	
 	 * 	Print to screen
 	 **/
-	private function print($msg, $brk = true, $pre = null, $save = true, $color = null) {
+	private function message($msg, $brk = true, $pre = null, $save = true, $color = null) {
 
 		if ($brk) {
 			$pre = ($pre === null) ? $this->qpre : $pre;
@@ -1039,9 +1039,9 @@ class Updater {
 	 * 	Abort
 	 **/
 	private function abort($msg = 'Execution aborted') {
-		$this->print('', true, 100, true, 'br'); 
-		$this->print($msg .' ---', true, 3, true, 'br');
-		$this->print('', true, 100, true, 'br'); 
+		$this->message('', true, 100, true, 'br'); 
+		$this->message($msg .' ---', true, 3, true, 'br');
+		$this->message('', true, 100, true, 'br'); 
 		exit();
 	}
 }
