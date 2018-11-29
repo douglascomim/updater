@@ -1,9 +1,24 @@
 <?php
 /**	
  * 	System updater manager
+ * 	
+ * 	Thanks
+ * 		MatthiasMullie - https://github.com/matthiasmullie/minify
+ * 
  *	@author Douglas Comim Pinheiro <douglas.comim@gmail.com>
- *	@version 2.0 | 19.11.2018
+ *	@version 2.1 | 19.11.2018
  **/ 
+
+include 'vendor/matthiasmullie/minify/src/Minify.php';
+include 'vendor/matthiasmullie/minify/src/JS.php';
+include 'vendor/matthiasmullie/minify/src/CSS.php';
+include 'vendor/matthiasmullie/path-converter/src/ConverterInterface.php';
+include 'vendor/matthiasmullie/path-converter/src/Converter.php';
+include 'vendor/matthiasmullie/path-converter/src/NoConverter.php';
+
+use MatthiasMullie\Minify;
+use MatthiasMullie\PathConverter\Converter;
+
 class Updater {
 
 	//	Path execution
@@ -131,7 +146,7 @@ class Updater {
 				), 
 				'js' => array(
 					'enable' => true,
-					'process' => array('compress'),
+					'process' => array('compress', 'syntax'),
 					'source' => array(
 						'/assets/js'
 					),
@@ -329,8 +344,6 @@ class Updater {
 		//	Process files
 		$this->deployProcessFiles();
 
-		$this->print('', true, 100, true, 'bb');
-		
 		//	Remove old site
 		$this->removeSiteOld();
 		
@@ -340,12 +353,15 @@ class Updater {
 		//	Remove files of installation
 		$this->removeFiles();
 
+		//	pos-commands
+		$this->posCommands();
+
 	}
 
 	/**	
 	 * 	Deploy process files/folders
 	**/
-	public function deployProcessFiles() {
+	private function deployProcessFiles() {
 		
 		$this->print('Processing files -', true, 1, true, 'bb');
 		$this->print('Compressing: ', true, -1, true, 'b0');
@@ -437,12 +453,13 @@ class Updater {
 		if ($this->choices['confirm'] != 'Y'){
 			$this->abort('Upgrade canceled by user');
 		}
+		$this->print('', true, 100, true, 'bb');
 	}
 
 	/**	
 	 * 	Remove files
 	 **/
-	public function removeFiles() {
+	private function removeFiles() {
 
 		$this->print('', true, 0);
 		$this->print('Removing files(s) -', true, 1, true, 'bb');
@@ -457,7 +474,7 @@ class Updater {
 	/**	
 	 * 	Remove Old site
 	 **/
-	public function removeSiteOld() {
+	private function removeSiteOld() {
 
 		$this->print('', true, 0);
 		$this->print('Removing Old Site(s) -', true, 1, true, 'bb');
@@ -473,7 +490,7 @@ class Updater {
 	/**	
 	 * 	Move sites
 	 **/
-	public function moveSites() {
+	private function moveSites() {
 
 		$this->print('', true, 0);
 		$this->print('Moving Site(s) -', true, 1, true, 'bb');
@@ -493,7 +510,7 @@ class Updater {
 	/**	
 	 * 	Replace persistent files
 	 **/
-	public function replacePersistentFiles() {
+	private function replacePersistentFiles() {
 		
 		$this->print('Persistent File(s) -', true, 1, true, 'bb');
 		$this->print('Copying Files:', true, -1, true, 'b0');
@@ -517,7 +534,7 @@ class Updater {
 	/**	
 	 * 	Replace persistent folders
 	 **/
-	public function replacePersistentFolders() {
+	private function replacePersistentFolders() {
 		
 		$this->print('Persistent Folder(s) -', true, 1, true, 'bb');
 		$this->print('Copying Folders:', true, -1, true, 'b0');
@@ -541,7 +558,7 @@ class Updater {
 	/**	
 	 * 	Create folders
 	 **/
-	public function createFolders() {
+	private function createFolders() {
 		
 		$this->print('Creating Folder(s) -', true, 1, true, 'bb');
 		$this->print('Folder(s):', true, -1, true, 'b0');
@@ -568,7 +585,7 @@ class Updater {
 	/**	
 	 * 	Remove folders
 	 **/
-	public function removeFolders() {
+	private function removeFolders() {
 		
 		$this->print('Removing Folder(s) -', true, 1, true, 'bb');
 		$this->print('Folder(s):', true, -1, true, 'b0');
@@ -591,7 +608,16 @@ class Updater {
 	/**	
 	 * 	Process compress
 	 **/
-	public function compress($path, $filename, $extension) {
+	private function compress($path, $filename, $extension) {
+
+		$compress = 'compress' . strtoupper($extension);
+		return $this->$compress($path);
+	}
+
+	/**	
+	 * 	Process compress PHP
+	 **/
+	private function compressPHP($path) {
 
 		$content = $this->getContent($path);
 
@@ -606,9 +632,40 @@ class Updater {
 	}
 
 	/**	
+	 * 	Process compress CSS
+	 **/
+	private function compressCSS($path) {
+		
+		$minifier = new Minify\CSS($path);
+		$minifier->minify($path);
+
+		return true;
+	}
+
+	/**	
+	 * 	Process compress JS
+	 **/
+	private function compressJS($path) {
+		
+		$minifier = new Minify\JS($path);
+		$minifier->minify($path);
+
+		return true;
+	}
+
+	/**	
 	 * 	Check sintax
 	 **/
-	public function syntax($path, $filename, $extension) {
+	private function syntax($path, $filename, $extension) {
+		
+		$syntax = 'syntax' . strtoupper($extension);
+		return $this->$syntax($path);
+	}
+
+	/**	
+	 * 	Check sintax PHP
+	 **/
+	private function syntaxPHP($path) {
 
 		$this->execute("php -l '$path'");
 		if (substr($this->rexec['output'][0], 0, 25) == 'No syntax errors detected') {
@@ -618,9 +675,35 @@ class Updater {
 	}
 
 	/**	
+	 * 	Check sintax CSS
+	 **/
+	private function syntaxCSS($path) {
+
+		return true;
+	}
+
+	/**	
+	 * 	Check sintax JS
+	 **/
+	private function syntaxJS($path) {
+
+		//	Test node
+		if (!`which node`) {
+			$this->abort('Application "node" not found. Try "apt install node" or "dnf install node"');
+		}
+
+		$this->execute("node --check '$path'");
+		if (trim($this->rexec['output'][0]) == '') {
+			return true;
+		}
+		return false;
+		
+	}
+
+	/**	
 	 * 	Verify files/folders
 	 **/
-	public function deployCheckFiles() {
+	private function deployCheckFiles() {
 
 		$this->qpre = 4;
 
@@ -651,7 +734,7 @@ class Updater {
 	/**	
 	 * 	Pre-Commands
 	 **/
-	public function preCommands() {
+	private function preCommands() {
 
 		$this->print('Running pre-commands -', true, 1, true, 'bb');
 		foreach ($this->environments[$this->choices['env']]['preCommands'] as $k => $v) {
@@ -663,9 +746,23 @@ class Updater {
 	}
 
 	/**	
+	 * 	Pos-Commands
+	 **/
+	private function posCommands() {
+
+		$this->print('Running pos-commands -', true, 1, true, 'bb');
+		foreach ($this->environments[$this->choices['env']]['posCommands'] as $k => $v) {
+			$this->print($v, true, -1, true, 'b0');
+			$this->execute($v);
+			$this->print($this->rexec['output'][0], true, 0);
+		}
+		$this->print('', true, 0);
+	}
+
+	/**	
 	 * 	Backup
 	 **/
-	public function backup() {
+	private function backup() {
 
 		$date = date('dmY_His');
 
@@ -698,7 +795,7 @@ class Updater {
 	/**	
 	 * 	Prompt
 	 **/
-	public function prompt($msg, $valid = array(), $key, $test = true) {
+	private function prompt($msg, $valid = array(), $key, $test = true) {
 
 		$this->print('', true, -1, false, false);
 		
@@ -723,21 +820,21 @@ class Updater {
 	/**	
 	 * 	Get Content of file
 	 **/
-	public function getContent($path) {
+	private function getContent($path) {
 		return file_get_contents($path);
 	}
 
 	/**	
 	 * 	Put Content of file
 	 **/
-	public function putContent($path, $data) {
+	private function putContent($path, $data) {
 		return file_put_contents($path, $data);
 	}
 
 	/**	
 	 * 	Unzip
 	 **/
-	public function unzip($path, $dst = null) {
+	private function unzip($path, $dst = null) {
 		$dst = ($dst) ? '-d "'. $dst .'"' : '';
 		//$this->execute('unzip -o "'. $path .'" '. $dst .' > /dev/null 2>&1');
 		$this->execute('unzip -o "'. $path .'" '. $dst);
@@ -809,7 +906,7 @@ class Updater {
 	/**	
 	 * 	Navigate into folders
 	 **/
-	public function folder($path, $func, $extension){
+	private function folder($path, $func, $extension){
 		
 		$dir = new DirectoryIterator($path);
 		foreach ($dir as $file) {
@@ -836,10 +933,8 @@ class Updater {
 			            	$this->counts[$func][$extension][0]++;
 			           	} else {
 			           		$this->print(' [FAIL]', false, 0, true, 'br');
-			            	$this->counts[$func][$extension][1]++;
-			           		if ($this->terror) {
-			           			$this->print($this->terror, true, -8, true, 'br');
-			           		}
+							$this->counts[$func][$extension][1]++;
+							exit();
 			           	}
 		            }
 		        }
