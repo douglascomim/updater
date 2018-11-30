@@ -138,6 +138,11 @@ class Updater {
 				'css' => array(
 					'enable' => true,
 					'process' => array('compress'),
+					'syntax' => array(
+						'app' => '', 
+						'string' => '',
+						'expected' => ''
+					),
 					'source' => array(
 						'/assets/css'
 					),
@@ -152,6 +157,11 @@ class Updater {
 				'js' => array(
 					'enable' => true,
 					'process' => array('compress', 'syntax'),
+					'syntax' => array(
+						'app' => 'node', 
+						'string' => '-c {PATH} 2>&1 | tee --append /tmp/output',
+						'expected' => ''
+					),
 					'source' => array(
 						'/assets/js'
 					),
@@ -164,6 +174,11 @@ class Updater {
 				'php' => array(
 					'enable' => true,
 					'process' => array('compress', 'syntax'),
+					'syntax' => array(
+						'app' => 'php', 
+						'string' => '-l {PATH}',
+						'expected' => 'No syntax errors detected'
+					),
 					'source' => array(
 						'/application',
 						'/system',
@@ -674,8 +689,14 @@ class Updater {
 	 **/
 	private function syntaxPHP($path) {
 
-		$this->execute("php -l '$path'");
-		if (substr($this->rexec['output'], 0, 25) == 'No syntax errors detected') {
+		if (!shell_exec('which '. $this->environments[$this->choices['env']]['process']['php']['syntax']['app'] )) {
+			$this->abort('Application not found. Please, install '. $this->environments[$this->choices['env']]['process']['php']['syntax']['app']);
+		}
+
+		$cmd = $this->environments[$this->choices['env']]['process']['php']['syntax']['app'] .' '. str_replace('{PATH}', $path, $this->environments[$this->choices['env']]['process']['php']['syntax']['string']);
+
+		$this->execute($cmd);
+		if (substr($this->rexec['output'], 0, strlen($this->environments[$this->choices['env']]['process']['php']['syntax']['expected'])) == $this->environments[$this->choices['env']]['process']['php']['syntax']['expected']) {
 			return true;
 		}
 		return false;
@@ -694,13 +715,17 @@ class Updater {
 	 **/
 	private function syntaxJS($path) {
 
-		//	Test node
-		if (!`which node`) {
-			$this->abort('Application "node" not found. Try "apt install node" or "dnf install node"');
+		//	Test
+		if (!shell_exec('which '. $this->environments[$this->choices['env']]['process']['js']['syntax']['app'] )) {
+			$this->abort('Application not found. Please, install '. $this->environments[$this->choices['env']]['process']['js']['syntax']['app']);
 		}
 
-		//node index.js 2>&1 | tee --append /tmp/output
-		$this->execute("node -c '$path' 2>&1 | tee --append /tmp/output");
+		$cmd = $this->environments[$this->choices['env']]['process']['js']['syntax']['app'] .' '. str_replace('{PATH}', $path, $this->environments[$this->choices['env']]['process']['js']['syntax']['string']);
+
+		$this->execute($cmd);
+		if (substr($this->rexec['output'], 0, strlen($this->environments[$this->choices['env']]['process']['js']['syntax']['expected'])) == $this->environments[$this->choices['env']]['process']['js']['syntax']['expected']) {
+
+		}
 		if (trim($this->rexec['output']) == '') {
 			return true;
 		}
