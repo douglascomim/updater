@@ -829,26 +829,55 @@ class Updater {
 	 **/
 	private function prompt($msg, $valid = array(), $key, $test = true) {
 
+		system('stty cbreak -echo');
+		$handle = fopen("php://stdin","r");
+		$prompt = '';
+
 		$this->message('', true, -1, false, false, 'n0');
-		
-		$prompt = readline($msg);
-		
-		if ($prompt != '') {
-			if (!$test) {
-				$this->message($msg ."[$prompt]", true, -1);
-				$this->choices[$key] = $prompt;
-				return true;
-			} else {
-				if (in_array($prompt, $valid)){
-					$this->reset();
-					$this->message($msg ."[$prompt]", true, -1);
-					$this->choices[$key] = $prompt;
-					return true;
+		echo $this->execute("printf '\r$msg'");
+
+		while(true){
+			$char = trim(fgetc($handle));
+			$code = ord($char);
+
+			if (!in_array($code, array(27))) {
+			
+				echo $this->execute("printf '$char';");
+			
+				if ($code == 127) { // Backspace
+					$this->clearLine($msg);
+				} else
+				if ($code == 0) { // Enter
+					if ($prompt != '') {
+						if (!$test) {
+							$this->choices[$key] = $prompt;
+							break;
+						} else {
+							if (in_array($prompt, $valid)){
+								$this->choices[$key] = $prompt;
+								break;
+							}
+						}
+					}
+					$prompt = '';
+					$this->clearLine($msg);
+				} else {
+					$prompt .= $char;
 				}
 			}
 		}
-		$this->reset();
-		$this->prompt($msg, $valid, $key, $test);
+		
+		fclose($handle);
+		system('stty sane');
+		return true;
+	}
+
+	/**	
+	 * 	Clear line
+	 **/
+	private function clearLine($msg) {
+		echo shell_exec("printf '\r'; printf ' %0.s' {0..100};");
+		echo shell_exec("printf '\r$msg'");
 	}
 
 	/**	
