@@ -193,6 +193,92 @@ class Updater {
 				), 
 			),
 		),
+		'HMLG' => array(
+			'user' => 'douglas',
+			'type' => 'deploy',						// Type of update: [deploy: use master.zip]
+			'maskFolder' => '0755',
+			'siteFolder' => 'homologacao',
+			'backupFolder' => 'backup',
+			'persistentFiles' => array(
+				'/application/config/config.php',
+				'/application/config/constants.php',
+				'/application/config/database.php',
+			),
+			'persistentFolders' => array(
+				'/files'
+			),
+			'createFolders' => array(
+				'/temp/trash',
+				'/temp/reports'
+			),
+			'removeFolders' => array(
+				'/_dev',
+			),
+			'preCommands' => array(
+				//'/etc/init.d/apache2 stop',
+			),
+			'posCommands' => array(
+				//'/etc/init.d/apache2 start',
+			),
+			'process' => array(
+				'css' => array(
+					'enable' => true,
+					'process' => array('compress'),
+					'syntax' => array(
+						'app' => '', 
+						'string' => '',
+						'expected' => ''
+					),
+					'source' => array(
+						'/assets/css'
+					),
+					'ignoreFiles' => array(
+					),
+					'ignoreFolders' => array(
+						'/css/images',
+						'/css/font-awesome',
+						'/css/fonts',
+					),
+				), 
+				'js' => array(
+					'enable' => true,
+					'process' => array('compress', 'syntax'),
+					'syntax' => array(
+						'app' => 'node', 
+						'string' => '-c {PATH} 2>&1 | tee --append /tmp/output',
+						'expected' => ''
+					),
+					'source' => array(
+						'/assets/js'
+					),
+					'ignoreFiles' => array(
+					),
+					'ignoreFolders' => array(
+						'/js/plugins',
+					),
+				),
+				'php' => array(
+					'enable' => true,
+					'process' => array('compress', 'syntax'),
+					'syntax' => array(
+						'app' => 'php', 
+						'string' => '-l {PATH}',
+						'expected' => 'No syntax errors detected'
+					),
+					'source' => array(
+						'/application',
+						'/system',
+					),
+					'ignoreFiles' => array(
+						'smiley_helper.php'
+					),
+					'ignoreFolders' => array(
+						'/cache',
+						'/logs',
+					),
+				), 
+			),
+		),
 	);
 
 	/**	
@@ -830,6 +916,7 @@ class Updater {
 	private function prompt($msg, $valid = array(), $key, $test = true) {
 
 		system('stty cbreak -echo');
+
 		$handle = fopen("php://stdin","r");
 		$prompt = '';
 
