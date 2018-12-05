@@ -335,7 +335,7 @@ class Updater {
 		$this->message('', true, 100, true, 'bb');
 		$this->message('Finished update process', true, -1, true, 'bb');
 		$this->message('', true, 100, true, 'bb');
-		$this->message('', true, -1); 
+		$this->message('', true, -1);
 	}
 
 	/**	
@@ -1187,7 +1187,7 @@ class Updater {
 	 * 	Log
 	 **/
 	private function log() {
-		file_put_contents('update_'. $this->choices['folder'] .'_'. date('dmY_Hi') .'.log', $this->log['clean']);
+		file_put_contents(__DIR__ . '/update_'. $this->choices['folder'] .'_'. date('dmY_Hi') .'.log', $this->log['clean']);
 	}
 
 	/**	
