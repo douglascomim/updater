@@ -922,7 +922,7 @@ class Updater {
 		$prompt = '';
 
 		$this->message('', true, -1, false, false, 'n0');
-		echo shell_exec("echo -en '\r$msg'");
+		echo shell_exec("printf '\r$msg'");
 
 		while(true){
 			$char = trim(fgetc($handle));
@@ -964,8 +964,8 @@ class Updater {
 	 * 	Clear line
 	 **/
 	private function clearLine($msg) {
-		echo shell_exec("echo -en '\r'; echo -en '                                                                                                    ';");
-		echo shell_exec("echo -en '\r$msg'");
+		echo shell_exec("printf '\r'; printf '                                                                                                    ';");
+		echo shell_exec("printf '\r$msg'");
 	}
 
 	/**	
