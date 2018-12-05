@@ -335,6 +335,7 @@ class Updater {
 		$this->message('', true, 100, true, 'bb');
 		$this->message('Finished update process', true, -1, true, 'bb');
 		$this->message('', true, 100, true, 'bb');
+		$this->message('', true, -1); 
 	}
 
 	/**	
@@ -343,7 +344,7 @@ class Updater {
 	private function deploy() {
 		
 		$this->message('Archive for deploy -', true, 1, true, 'bb');
-		$this->prompt('', array(), 'file', false);
+		$this->prompt('[File] : ', array(), 'file', false);
 		$this->choices['folder'] = substr($this->choices['file'], 0, -4);
 		
 		//	Summary
@@ -921,7 +922,7 @@ class Updater {
 		$prompt = '';
 
 		$this->message('', true, -1, false, false, 'n0');
-		echo $this->execute("printf '\r$msg'");
+		echo shell_exec("echo -en '\r$msg'");
 
 		while(true){
 			$char = trim(fgetc($handle));
@@ -963,8 +964,8 @@ class Updater {
 	 * 	Clear line
 	 **/
 	private function clearLine($msg) {
-		echo shell_exec("printf '\r'; printf ' %0.s' {0..100};");
-		echo shell_exec("printf '\r$msg'");
+		echo shell_exec("echo -en '\r'; echo -en '                                                                                                    ';");
+		echo shell_exec("echo -en '\r$msg'");
 	}
 
 	/**	
@@ -1196,6 +1197,7 @@ class Updater {
 		$this->message('', true, 100, true, 'br'); 
 		$this->message($msg .' ---', true, 3, true, 'br');
 		$this->message('', true, 100, true, 'br'); 
+		$this->message('', true, -1); 
 
 		$this->log();
 		exit();
