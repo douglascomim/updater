@@ -918,19 +918,20 @@ class Updater {
 
 		system('stty cbreak -echo');
 
-		$handle = fopen("php://stdin","r");
+		$handle = fopen('php://stdin','r');
 		$prompt = '';
 
 		$this->message('', true, -1, false, false, 'n0');
-		echo shell_exec("printf '\r$msg'");
-
+		echo shell_exec("printf '\r$msg';");
+		
 		while(true){
+
 			$char = trim(fgetc($handle));
 			$code = ord($char);
 
 			if (!in_array($code, array(27))) {
 			
-				echo $this->execute("printf '$char';");
+				echo shell_exec("printf '$char';");
 			
 				if ($code == 127) { // Backspace
 					$this->clearLine($msg);
@@ -938,10 +939,14 @@ class Updater {
 				if ($code == 0) { // Enter
 					if ($prompt != '') {
 						if (!$test) {
+							$this->log['clean'] .= $msg . $prompt;
+							$this->log['full'] .= $msg . $prompt;
 							$this->choices[$key] = $prompt;
 							break;
 						} else {
 							if (in_array($prompt, $valid)){
+								$this->log['clean'] .= $msg . $prompt;
+								$this->log['full'] .= $msg . $prompt;
 								$this->choices[$key] = $prompt;
 								break;
 							}
