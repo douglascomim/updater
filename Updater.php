@@ -649,8 +649,14 @@ class Updater {
 		$this->message('Copying Folders:', true, -1, true, 'b0');
 		foreach ($this->environments[$this->choices['env']]['persistentFolders'] as $k => $v) {
 			if ($this->path && $this->environments[$this->choices['env']]['siteFolder'] && $v) {
-				$this->message('Copying: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .' '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
-				$this->execute('cp -Rfp "'. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .'" "'. $this->path . $this->choices['folder'] .'"');
+                
+                $tmp = explode('/', $v);
+				unset($tmp[(count($tmp)-1)]);
+				
+				$folderDest = implode('/', $tmp);
+                
+                $this->message('Copying: '. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .' '. $this->path . $this->choices['folder'] . $v, true, -4, true, 'n0');
+				$this->execute('cp -Rfp "'. $this->path . $this->environments[$this->choices['env']]['siteFolder'] . $v .'" "'. $this->path . $this->choices['folder'] . $folderDest .'"');
 				if ($this->rexec['code']) {
 					$this->message(' [OK]', false, 0, true, 'ng');
 					$this->counts['persistent_folders']['copy'][0]++;
