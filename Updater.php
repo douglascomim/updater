@@ -24,7 +24,7 @@ use MatthiasMullie\PathConverter\Converter;
 class Updater {
 
 	//	Path execution
-	private $path = '/home/douglas/Apps/updater-test/'; // __DIR__
+	private $path = '/home/douglas/Apps/github/updater-test/'; // __DIR__
 	
 	//	Breakline chars
 	private $breakLine = "\n\r";
@@ -111,19 +111,23 @@ class Updater {
 			'user' => 'douglas',
 			'type' => 'deploy',						// Type of update: [deploy: use master.zip]
 			'maskFolder' => '0755',
-			'siteFolder' => 'producao',
+			'siteFolder' => 'webc',
 			'backupFolder' => 'backup',
 			'persistentFiles' => array(
-				'/application/config/config.php',
-				'/application/config/constants.php',
-				'/application/config/database.php',
+				'/config.php',
+				'/classes/ConfigClass.php'
 			),
 			'persistentFolders' => array(
-				'/files'
+				'/temp/xml',
+				'/temp/execution',
+				'/lib/images'
 			),
 			'createFolders' => array(
 				'/temp/trash',
-				'/temp/reports'
+				'/temp/reports',
+				'/temp/logs',
+				'/temp/xml',
+				'/temp/execution',
 			),
 			'removeFolders' => array(
 				'/_dev',
@@ -136,7 +140,7 @@ class Updater {
 			),
 			'process' => array(
 				'css' => array(
-					'enable' => true,
+					'enable' => false,
 					'process' => array('compress'),
 					'syntax' => array(
 						'app' => '', 
@@ -144,18 +148,17 @@ class Updater {
 						'expected' => ''
 					),
 					'source' => array(
-						'/assets/css'
+						'/lib/css'
 					),
 					'ignoreFiles' => array(
 					),
 					'ignoreFolders' => array(
-						'/css/images',
-						'/css/font-awesome',
-						'/css/fonts',
+						'/lib/css/images',
+						'/lib/css/font-awesome',
 					),
 				), 
 				'js' => array(
-					'enable' => true,
+					'enable' => false,
 					'process' => array('compress', 'syntax'),
 					'syntax' => array(
 						'app' => 'node', 
@@ -163,12 +166,12 @@ class Updater {
 						'expected' => ''
 					),
 					'source' => array(
-						'/assets/js'
+						'/lib/js'
 					),
 					'ignoreFiles' => array(
 					),
 					'ignoreFolders' => array(
-						'/js/plugins',
+						'/lib/js/plugins',
 					),
 				),
 				'php' => array(
@@ -180,15 +183,19 @@ class Updater {
 						'expected' => 'No syntax errors detected'
 					),
 					'source' => array(
-						'/application',
-						'/system',
+						'/classes',
+						'/controllers',
+						'/models',
+						'/views',
+						'/lib/php'
 					),
 					'ignoreFiles' => array(
 						'smiley_helper.php'
 					),
 					'ignoreFolders' => array(
-						'/cache',
-						'/logs',
+						'/lib/php/batik-1.7.1',
+						'/lib/php/mpdf60',
+						'/lib/php/phpmailer'
 					),
 				), 
 			),
@@ -725,7 +732,7 @@ class Updater {
 	 **/
 	private function compress($path, $extension) {
 
-		$compress = 'compress' . strtoupper($extension);
+		$compress = 'compress'. strtoupper($extension);
 		return $this->$compress($path);
 	}
 
@@ -773,7 +780,7 @@ class Updater {
 	 **/
 	private function syntax($path, $extension) {
 		
-		$syntax = 'syntax' . strtoupper($extension);
+		$syntax = 'syntax'. strtoupper($extension);
 		return $this->$syntax($path);
 	}
 
@@ -1125,16 +1132,28 @@ class Updater {
 
 		$content = preg_replace('/\n\s*\n/', ' ', $content);
 		$content = preg_replace('/[\t\n\r]/', ' ', $content);
-		//$content = preg_replace('/\r\n+/', ' ', $content);
 		$content = preg_replace('/ {2,}/', ' ', $content);
 
 		$content = preg_replace('/> </', '><', $content);
+		$content = preg_replace('/ =>/', '=>', $content);
 		$content = preg_replace('/=> /', '=>', $content);
+        
+        $content = str_replace(
+            array(' ;', '; ', ' )', '( ', ' }', '{ ', ') {', 'if (', 'foreach (', 'for (', 'else {', '} else', ". '", "' .", '. "', '" .', '. $' ),
+            array(';' , ';' , ')' , '(' , '}' , '{' , '){' , 'if(' , 'foreach(' , 'for(' , 'else{' , '}else' , ".'" , "'." , '."' , '".' , '.$' ),
+            $content
+        );
 
-		$content = preg_replace('/<<<EOF/', "<<<EOF\n", $content);
-		$content = preg_replace('/<<<EOT/', "<<<EOT\n", $content);
-		$content = preg_replace('/EOF;/', "\nEOF;", $content);
-		$content = preg_replace('/EOT;/', "\nEOT;", $content);
+        $content = str_replace(
+            array('<?php)' , '<?php(' , '<?php}' , '<?php{'),
+            array('<?php )', '<?php (', '<?php }', '<?php {'),
+            $content
+        );
+
+		$content = preg_replace('/<<<EOF /', "<<<EOF\n", $content);
+		$content = preg_replace('/<<<EOT /', "<<<EOT\n", $content);
+		$content = preg_replace('/EOF;/', "\nEOF;\n", $content);
+		$content = preg_replace('/EOT;/', "\nEOT;\n", $content);
 		
 		return $content;
 	}
