@@ -106,187 +106,7 @@ class Updater {
 	private $envs = array();
 
 	//	Parameters
-	private $environments = array(
-		'PROD' => array(
-			'user' => 'douglas',
-			'type' => 'deploy',						// Type of update: [deploy: use master.zip]
-			'maskFolder' => '0755',
-			'siteFolder' => 'webc',
-			'backupFolder' => 'backup',
-			'persistentFiles' => array(
-				'/config.php',
-				'/classes/ConfigClass.php'
-			),
-			'persistentFolders' => array(
-				'/temp/xml',
-				'/temp/execution',
-				'/lib/images'
-			),
-			'createFolders' => array(
-				'/temp/trash',
-				'/temp/reports',
-				'/temp/logs',
-				'/temp/xml',
-				'/temp/execution',
-			),
-			'removeFolders' => array(
-				'/_dev',
-			),
-			'preCommands' => array(
-				//'/etc/init.d/apache2 stop',
-			),
-			'posCommands' => array(
-				//'/etc/init.d/apache2 start',
-			),
-			'process' => array(
-				'css' => array(
-					'enable' => false,
-					'process' => array('compress'),
-					'syntax' => array(
-						'app' => '', 
-						'string' => '',
-						'expected' => ''
-					),
-					'source' => array(
-						'/lib/css'
-					),
-					'ignoreFiles' => array(
-					),
-					'ignoreFolders' => array(
-						'/lib/css/images',
-						'/lib/css/font-awesome',
-					),
-				), 
-				'js' => array(
-					'enable' => false,
-					'process' => array('compress', 'syntax'),
-					'syntax' => array(
-						'app' => 'node', 
-						'string' => '-c {PATH} 2>&1 | tee --append /tmp/output',
-						'expected' => ''
-					),
-					'source' => array(
-						'/lib/js'
-					),
-					'ignoreFiles' => array(
-					),
-					'ignoreFolders' => array(
-						'/lib/js/plugins',
-					),
-				),
-				'php' => array(
-					'enable' => true,
-					'process' => array('compress', 'syntax'),
-					'syntax' => array(
-						'app' => 'php', 
-						'string' => '-l {PATH}',
-						'expected' => 'No syntax errors detected'
-					),
-					'source' => array(
-						'/classes',
-						'/controllers',
-						'/models',
-						'/views',
-						'/lib/php'
-					),
-					'ignoreFiles' => array(
-						'smiley_helper.php'
-					),
-					'ignoreFolders' => array(
-						'/lib/php/batik-1.7.1',
-						'/lib/php/mpdf60',
-						'/lib/php/phpmailer'
-					),
-				), 
-			),
-		),
-		'HMLG' => array(
-			'user' => 'douglas',
-			'type' => 'deploy',						// Type of update: [deploy: use master.zip]
-			'maskFolder' => '0755',
-			'siteFolder' => 'homologacao',
-			'backupFolder' => 'backup',
-			'persistentFiles' => array(
-				'/application/config/config.php',
-				'/application/config/constants.php',
-				'/application/config/database.php',
-			),
-			'persistentFolders' => array(
-				'/files'
-			),
-			'createFolders' => array(
-				'/temp/trash',
-				'/temp/reports'
-			),
-			'removeFolders' => array(
-				'/_dev',
-			),
-			'preCommands' => array(
-				//'/etc/init.d/apache2 stop',
-			),
-			'posCommands' => array(
-				//'/etc/init.d/apache2 start',
-			),
-			'process' => array(
-				'css' => array(
-					'enable' => true,
-					'process' => array('compress'),
-					'syntax' => array(
-						'app' => '', 
-						'string' => '',
-						'expected' => ''
-					),
-					'source' => array(
-						'/assets/css'
-					),
-					'ignoreFiles' => array(
-					),
-					'ignoreFolders' => array(
-						'/css/images',
-						'/css/font-awesome',
-						'/css/fonts',
-					),
-				), 
-				'js' => array(
-					'enable' => true,
-					'process' => array('compress', 'syntax'),
-					'syntax' => array(
-						'app' => 'node', 
-						'string' => '-c {PATH} 2>&1 | tee --append /tmp/output',
-						'expected' => ''
-					),
-					'source' => array(
-						'/assets/js'
-					),
-					'ignoreFiles' => array(
-					),
-					'ignoreFolders' => array(
-						'/js/plugins',
-					),
-				),
-				'php' => array(
-					'enable' => true,
-					'process' => array('compress', 'syntax'),
-					'syntax' => array(
-						'app' => 'php', 
-						'string' => '-l {PATH}',
-						'expected' => 'No syntax errors detected'
-					),
-					'source' => array(
-						'/application',
-						'/system',
-					),
-					'ignoreFiles' => array(
-						'smiley_helper.php'
-					),
-					'ignoreFolders' => array(
-						'/cache',
-						'/logs',
-					),
-				), 
-			),
-		),
-	);
+	private $environments = array();
 
 	/**	
 	 * 	Main method
@@ -294,6 +114,12 @@ class Updater {
 	public function start() {
 
 		echo $this->execute('clear');
+        
+        $this->environments = json_decode(file_get_contents(__DIR__ .'/config.json'), true);
+
+        if (!is_array($this->environments)) {
+            $this->abort('File "config.json" is not valid.');
+        }
 
 		foreach ($this->environments as $k => $v) {
 			$this->envs[] = $k;
